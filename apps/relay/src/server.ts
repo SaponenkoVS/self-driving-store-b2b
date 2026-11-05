@@ -3,6 +3,7 @@ import { RelayDb } from "./db";
 import { Deliverer } from "./deliver";
 import { createApp } from "./app";
 import { MedusaDirectory, SeedDirectory } from "./directory";
+import { MedusaStoreApi } from "./store-api";
 
 const db = new RelayDb(process.env.DB_PATH ?? "relay.sqlite");
 const bus = new Bus();
@@ -14,9 +15,15 @@ const directory = process.env.MEDUSA_URL
     ? SeedDirectory.fromFile(process.env.CUSTOMERS_SEED)
     : undefined;
 if (!directory) console.warn("MEDUSA_URL (or CUSTOMERS_SEED) is not set: customer login is disabled");
+// Catalog search and order creation on confirm need the real Medusa.
+const store = process.env.MEDUSA_URL
+  ? new MedusaStoreApi(process.env.MEDUSA_URL, process.env.MEDUSA_SERVICE_TOKEN ?? "")
+  : undefined;
+if (!store) console.warn("MEDUSA_URL is not set: /catalog and order creation are disabled");
 
 const app = createApp({
   directory,
+  store,
   db,
   bus,
   deliverer,

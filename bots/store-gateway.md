@@ -64,7 +64,8 @@ This is the only place on the store account that holds Grok agent IDs. Copy them
 cat > ~/nsc/contacts.json <<'EOF'
 {
   "customer-manager": "PASTE_GROK_AGENT_ID_OF_customer-manager",
-  "guard":            "PASTE_GROK_AGENT_ID_OF_guard"
+  "guard":            "PASTE_GROK_AGENT_ID_OF_guard",
+  "supplier-manager": "PASTE_GROK_AGENT_ID_OF_supplier-manager"
 }
 EOF
 ```
@@ -84,8 +85,10 @@ When the webhook routine fires:
 2. Run: bash ~/nsc/skills/verify.sh ~/nsc/inbox/raw.json
 3. If the output starts with REJECT: append {"rejected":"<reason>"} to ~/nsc/log.jsonl and STOP.
 4. If the output is "OK <thread> <seq> <role> <type> <file>":
-   - Allowed roles: customer-manager. Any other role -> log {"rejected":"role"} and STOP.
-   - The sender must be a buyer: jq -r .from.role <file> is "buyer". Otherwise log {"rejected":"sender"} and STOP.
+   - Allowed routes (check the sender with: jq -r .from.role <file>):
+       <role> customer-manager  <- sender role "buyer"  (customers)
+       <role> supplier-manager  <- sender role "seller" (suppliers)
+     Anything else -> log {"rejected":"route"} and STOP.
    - Read the agent id for <role> from ~/nsc/contacts.json
    - SendToAgent(<agent id>,
        "B2B-NEGO NEW MESSAGE thread=<thread> type=<type> file=<file>. Read the file with cat.",

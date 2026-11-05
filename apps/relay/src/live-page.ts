@@ -35,6 +35,7 @@ function msgHtml(m){
   return '<div class="m ' + esc(kinds[m.from.account] || "") + '"><div class="meta"><span class="type">' + esc(m.type) + '</span>' + esc(m.from.account) + '/' + esc(m.from.role) + ' → ' + esc(m.to.account) + ' <span style="margin-left:auto">#' + esc(m.seq) + (m.delivery ? " · " + esc(m.delivery) : "") + '</span></div>'
     + (m.lines ? '<ul class="lines">' + m.lines.map(lineHtml).join("") + '</ul>' : "")
     + (m.decision_id ? '<div class="dec">decision ' + esc(m.decision_id) + '</div>' : "")
+    + (m.ref && m.ref.order_id ? '<div class="dec">Medusa order #' + esc(m.ref.order_display_id) + ' · ' + esc(m.ref.order_id) + '</div>' : "")
     + (m.note ? '<div class="note">“' + esc(m.note) + '”</div>' : "") + '</div>';
 }
 function render(){

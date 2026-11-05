@@ -35,6 +35,38 @@ export const BotsVerifyCustomer = z
   .strict();
 export type BotsVerifyCustomerType = z.infer<typeof BotsVerifyCustomer>;
 
+const flag = z
+  .union([z.literal("1"), z.literal("true"), z.literal("0"), z.literal("false")])
+  .transform((v) => v === "1" || v === "true");
+
+export const BotsCatalogQuery = z.object({
+  q: z.string().max(200).optional(),
+  sku: z.string().max(1000).optional(),
+  qty: z.coerce.number().int().positive().max(1_000_000).optional(),
+  in_stock: flag.optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export const BotsCreateOrder = z
+  .object({
+    customer_id: z.string().min(1).max(64),
+    thread_id: z.string().min(3).max(64),
+    decision_id: z.string().min(1).max(64),
+    lines: z
+      .array(
+        z.object({
+          sku: z.string().min(1).max(64),
+          qty: z.number().int().positive().max(1_000_000),
+          unit_price: z.number().positive(),
+        }),
+      )
+      .min(1)
+      .max(50),
+    note: z.string().max(1000).optional(),
+  })
+  .strict();
+export type BotsCreateOrderType = z.infer<typeof BotsCreateOrder>;
+
 export const botsMiddlewares: MiddlewareRoute[] = [
   {
     matcher: "/bots*",
@@ -44,5 +76,10 @@ export const botsMiddlewares: MiddlewareRoute[] = [
     matcher: "/bots/customers/verify",
     method: "POST",
     middlewares: [validateAndTransformBody(BotsVerifyCustomer)],
+  },
+  {
+    matcher: "/bots/orders",
+    method: "POST",
+    middlewares: [validateAndTransformBody(BotsCreateOrder)],
   },
 ];

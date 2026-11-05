@@ -18,10 +18,11 @@ You will copy these values between steps:
 | ---------------------------------------- | --------------------------- | --------------------------------------- |
 | `RELAY_URL` (https tunnel URL)           | step 1                      | store `~/nsc/env`, customer `~/nsc/env` |
 | `ADMIN_TOKEN`                            | `apps/relay/.env`           | the invite curl (step 3)                |
-| Agent IDs of `customer-manager`, `guard` | each bot's settings in Grok | store `~/nsc/contacts.json`             |
+| Agent IDs of `customer-manager`, `guard`, `supplier-manager` | each bot's settings in Grok | store `~/nsc/contacts.json` |
+| Supplier invite code + seller webhook URL/key | step 5 | the seller's `register.sh` |
 | Gateway webhook URL + `crsr_…` key       | gateway routine             | the register curl (step 3)              |
 | `account_token`, `relay_secret`          | the register response       | store `~/nsc/env`                       |
-| Buyer webhook URL + key                  | buyer routine               | `set_inbox.sh` (step 5)                 |
+| Buyer webhook URL + key                  | buyer routine               | `set_inbox.sh` (step 6)                 |
 
 ---
 
@@ -51,9 +52,9 @@ curl -s -X POST $RELAY_URL/customers/auth -H 'Content-Type: application/json' \
 
 > Use the **static domain**: without it ngrok gives a **new URL on every restart**, and you must update `RELAY_URL` in both bots' `~/nsc/env`. The customer's `identity.json` also stores it, so re-run `store_auth.sh` on the customer side.
 
-## 2. Store Grok account: create the 3 bots
+## 2. Store Grok account: create the 4 bots
 
-All three must share **one cloud computer**: the Gateway saves files the other two read.
+All four must share **one cloud computer**: the Gateway saves files the others read.
 
 1. **gateway** ([store-gateway.md](store-gateway.md))
    - Create bot `gateway` and paste the prompt from section 3.
@@ -64,8 +65,9 @@ All three must share **one cloud computer**: the Gateway saves files the other t
 3. **customer-manager** ([store-customer-manager.md](store-customer-manager.md))
    - Create bot `customer-manager`, paste its prompt and run its section 2.
    - No routine needed.
-4. **Agent IDs:** copy the agent IDs of `customer-manager` and `guard` into `~/nsc/contacts.json` (template in store-gateway.md §2).
-5. **jq / openssl / curl:** if any are missing on the cloud computer, run `apt-get install -y jq openssl curl`.
+4. **supplier-manager** ([store-supplier-manager.md](store-supplier-manager.md)): create bot `supplier-manager`, paste its prompt and run its section 2. No routine needed.
+5. **Agent IDs:** copy the agent IDs of `customer-manager`, `guard` and `supplier-manager` into `~/nsc/contacts.json` (template in store-gateway.md §2).
+6. **jq / openssl / curl:** if any are missing on the cloud computer, run `apt-get install -y jq openssl curl`.
 
 ## 3. Store Grok account: connect it to the Relay
 
@@ -103,12 +105,27 @@ Use a **different Grok account** (the customer's). Follow [customer-buyer.md](cu
 1. Create bot `buyer` and paste the prompt from section 3.
 2. In the section 2 script, replace `https://REPLACE-ME-relay.example` with your `RELAY_URL`, then run it on the buyer's cloud computer.
 3. Choose how replies arrive:
-   - **Instant:** a **Webhook** routine with the action _"Process the incoming webhook as described in your instructions."_ Keep its URL and key for step 5.
+   - **Instant:** a **Webhook** routine with the action _"Process the incoming webhook as described in your instructions."_ Keep its URL and key for step 6.
    - **Simple:** a routine **every 5 min** with the action _"Check the B2B store for replies (polling)."_
 
 You can add more customers the same way: one Grok account and one `buyer` bot each. Each signs in with its own Medusa login.
 
-## 5. Run the demo
+## 5. Supplier Grok account: the seller bot
+
+Use a **third Grok account** (the supplier's). Follow [supplier-seller.md](supplier-seller.md):
+
+1. Create bot `seller`, paste the prompt from section 4, and add its **Webhook** routine. Keep the URL and key.
+2. In the section 2 script, replace `https://REPLACE-ME-relay.example` with your `RELAY_URL`, then run it on the seller's cloud computer.
+3. From your laptop, create the supplier invite:
+   ```sh
+   ADMIN=$(grep ^ADMIN_TOKEN= apps/relay/.env | cut -d= -f2-)
+   curl -s -X POST $RELAY_URL/admin/invites -H "Authorization: Bearer $ADMIN" -H 'Content-Type: application/json' \
+     -d '{"account_id":"steelworks","name":"Steelworks Brno","kind":"supplier"}' | jq -r .invite_code
+   ```
+4. On the seller's cloud computer: `bash ~/nsc/skills/register.sh <invite_code> "<webhook url>" "<crsr_… key>"` → `REGISTERED steelworks`.
+5. Self-test: tell the store's `supplier-manager` in chat *"Source 15 × PIPE-SS-24 for delivery by <date 3 working days from now>"*. Expected on `/live`: rfq → offer 74.80 (rush) → guard asks you (margin 16%) → accept → confirm.
+
+## 6. Run the demo
 
 In the buyer's chat:
 
@@ -117,7 +134,11 @@ In the buyer's chat:
    `buyer@bella-bau.test`, `Bella-Bau Sp. z o.o.`, `5260250274` → "Signed in as Anna Kowalska @ Bella-Bau Sp. z o.o."
 3. If you chose the webhook routine: "Run `bash ~/nsc/skills/set_inbox.sh <buyer webhook url> <key>`" (only once).
 4. **buyer:** asks for target and maximum unit price. Try **target 78, max 84** (CHF).
-5. Watch `$RELAY_URL/live`: rfq → offer → counter → … → accept → confirm.
+5. Watch `$RELAY_URL/live`. The store has only **25** PIPE-SS-24 in stock, so 40 starts the supplier flow:
+   - customer thread: rfq → info ("checking with our supplier")
+   - supplier thread: rfq → offer → (guard / you) → accept/counter → confirm
+   - customer thread: offer → counter → … → accept → confirm
+   Without a supplier account, ask for **25 or fewer** pipes, otherwise the customer thread waits for sourcing.
 
 Where the prices come from:
 
@@ -132,7 +153,7 @@ Other logins: `zakupy@nowak-bud.test` / `Nowak Budownictwo S.A.` / `7781401239`,
 
 | Symptom                                          | Cause                                                                                                                        |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `WRONG_DETAILS` at sign-in                       | Email, name or NIP doesn't match Medusa. Spacing in the name matters: "Sp. z o.o." works, "sp z oo" doesn't.                 |
+| `WRONG_DETAILS` at sign-in                       | Email, name or NIP doesn't match Medusa. Case, spaces and punctuation in the name don't matter ("sp z oo" works). |
 | `ERROR 502` at sign-in                           | Medusa isn't running, or the service token differs between `backend/.env` and `apps/relay/.env`.                             |
 | Send returns 404 `unknown recipient`             | The store hasn't registered with the Relay yet (step 3).                                                                     |
 | Send returns 422                                 | Protocol violation (wrong turn, missing price, store message without `decision_id`). The `reason` field says which.          |

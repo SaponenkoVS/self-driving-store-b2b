@@ -2,11 +2,13 @@ import { Hono, type Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { Envelope, OutgoingMessage, initialThread, transition, PROTOCOL } from "@nsc/protocol";
+import type { Envelope as EnvelopeT, OutgoingMessage as OutgoingMessageT } from "@nsc/protocol";
 import { Bus } from "./bus";
 import { RelayDb, type Account, type Principal } from "./db";
 import { RateLimiter, type CustomerDirectory } from "./directory";
 import { Deliverer } from "./deliver";
 import { LIVE_HTML } from "./live-page";
+import { StoreApiError, type OrderLine, type OrderSummary, type StoreApi } from "./store-api";
 
 export interface RelayDeps {
   db: RelayDb;
@@ -18,6 +20,8 @@ export interface RelayDeps {
   /** Verifies customer bot logins (email + company name + NIP). Absent = customer login disabled. */
   directory?: CustomerDirectory;
   loginLimiter?: RateLimiter;
+  /** The store's Medusa: catalog search, and the order created when the store confirms. Absent = both disabled. */
+  store?: StoreApi;
 }
 
 type Vars = { Variables: { account: Account; principal: Principal } };
@@ -39,6 +43,32 @@ const CustomerLoginBody = z.object({
   company_name: z.string().min(1).max(200),
   nip: z.string().min(10).max(20),
 });
+
+const CatalogParams = z.object({
+  q: z.string().max(200).optional(),
+  sku: z.string().max(1000).optional(),
+  qty: z.coerce.number().int().positive().optional(),
+  in_stock: z.enum(["1", "0", "true", "false"]).transform((v) => v === "1" || v === "true").optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+
+/**
+ * What a confirmed thread turns into: the customer is the Relay-stamped user of the rfq, the lines are the last
+ * priced lines both sides saw (the accept, or the offer/counter it accepted). Never taken from the confirm itself.
+ */
+export function orderFromThread(messages: EnvelopeT[]): { customer_id: string | null; lines: OrderLine[] } {
+  const customer_id = messages.find((m) => m.type === "rfq")?.from.user ?? null;
+  const priced = [...messages]
+    .reverse()
+    .find(
+      (m) =>
+        (m.type === "accept" || m.type === "offer" || m.type === "counter") &&
+        m.lines?.length &&
+        m.lines.every((l) => typeof l.unit_price === "number"),
+    );
+  const lines = (priced?.lines ?? []).map((l) => ({ sku: l.sku, qty: l.qty, unit_price: l.unit_price as number }));
+  return { customer_id, lines };
+}
 
 const bearer = (c: Context) => c.req.header("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
 
@@ -131,6 +161,20 @@ export function createApp(deps: RelayDeps) {
 
   authed.get("/directory", (c) => c.json({ accounts: db.directory() }));
 
+  // search_catalog: products, volume prices and stock from Medusa. Any signed-in account.
+  authed.get("/catalog", async (c) => {
+    if (!deps.store) return c.json({ error: "catalog is not configured (MEDUSA_URL)" }, 503);
+    const params = CatalogParams.safeParse(c.req.query());
+    if (!params.success) return c.json({ error: "invalid query", details: params.error.flatten() }, 400);
+    try {
+      return c.json(await deps.store.catalog(params.data));
+    } catch (err) {
+      if (err instanceof StoreApiError && err.status < 500) return c.json(err.body, err.status as 400);
+      console.error("catalog failed", err);
+      return c.json({ error: "store is unavailable, try again" }, 502);
+    }
+  });
+
   authed.post("/messages", async (c) => {
     const me = c.get("account");
     const parsed = OutgoingMessage.safeParse(await c.req.json().catch(() => null));
@@ -154,6 +198,19 @@ export function createApp(deps: RelayDeps) {
       if (existing.thread_id !== msg.thread_id || existing.from.account !== me.id)
         return c.json({ error: "msg_id already used" }, 409);
       return c.json({ ok: true, duplicate: true, seq: existing.seq, thread: db.thread(msg.thread_id) });
+    }
+
+    // create_order: when the store (a governed account) confirms an accepted thread, the order is created in Medusa
+    // first, from the thread's history. If Medusa refuses (stock, floor price, spending limit), the confirm is refused.
+    if (msg.type === "confirm" && me.governed && deps.store) {
+      const placed = await placeOrder(deps.store, msg, me.id);
+      if ("error" in placed) {
+        bus.publish({ kind: "rejected", thread_id: msg.thread_id, from: me.id, type: msg.type, reason: placed.error });
+        return c.json({ error: "order not created", reason: placed.error }, placed.status);
+      }
+      if (placed.order) {
+        msg.ref = { ...msg.ref, order_id: placed.order.order_id, order_display_id: String(placed.order.display_id) };
+      }
     }
 
     const governedAccounts = db.governedAccounts();
@@ -193,6 +250,23 @@ export function createApp(deps: RelayDeps) {
     return c.json({ thread, messages: db.messages(thread.id, since) });
   });
 
+  // get_order_status: the Medusa order of a confirmed thread, for either party.
+  authed.get("/threads/:id/order", async (c) => {
+    const me = c.get("account").id;
+    const thread = db.thread(c.req.param("id"));
+    if (!thread || (thread.requester !== me && thread.responder !== me)) return c.json({ error: "not found" }, 404);
+    if (!deps.store) return c.json({ error: "orders are not configured (MEDUSA_URL)" }, 503);
+    const confirm = db.messages(thread.id).find((m) => m.type === "confirm" && m.ref?.order_id);
+    if (!confirm?.ref?.order_id) return c.json({ error: "no order for this thread yet", thread }, 404);
+    try {
+      const order = await deps.store.order(confirm.ref.order_id);
+      return order ? c.json({ thread_id: thread.id, order }) : c.json({ error: "order not found in the store" }, 404);
+    } catch (err) {
+      console.error("order lookup failed", err);
+      return c.json({ error: "store is unavailable, try again" }, 502);
+    }
+  });
+
   authed.post("/messages/:msg_id/ack", (c) => {
     const ok = db.ack(c.req.param("msg_id"), c.get("account").id);
     return c.json({ ok }, ok ? 200 : 404);
@@ -220,6 +294,25 @@ export function createApp(deps: RelayDeps) {
       unsubscribe();
     });
   });
+
+  /** Creates the Medusa order for a store confirm. { order: null } = not a confirm we can act on; the protocol decides. */
+  type Placed = { order: OrderSummary | null } | { error: string; status: 422 | 502 };
+  async function placeOrder(store: StoreApi, msg: OutgoingMessageT, me: string): Promise<Placed> {
+    const thread = db.thread(msg.thread_id);
+    if (!thread || thread.status !== "accepted" || thread.pending_on !== me || !msg.decision_id) return { order: null };
+    const { customer_id, lines } = orderFromThread(db.messages(thread.id));
+    if (!customer_id) return { error: "the rfq has no signed-in customer, so no order can be created", status: 422 as const };
+    if (!lines.length) return { error: "no priced lines were accepted in this thread", status: 422 as const };
+    try {
+      const order = await store.createOrder({ customer_id, thread_id: thread.id, decision_id: msg.decision_id, lines, note: msg.note });
+      return { order };
+    } catch (err) {
+      if (err instanceof StoreApiError && err.status < 500)
+        return { error: `${err.body.error ?? "order_failed"}: ${err.message}`, status: 422 as const };
+      console.error("order creation failed", err);
+      return { error: "store is unavailable, try again", status: 502 as const };
+    }
+  }
 
   return app;
 }

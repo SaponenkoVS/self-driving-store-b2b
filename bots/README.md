@@ -22,7 +22,9 @@ Customers don't swap keys or get invite codes. The buyer bot signs in once with 
 | `store/gateway` | store | [store-gateway.md](store-gateway.md) |
 | `store/customer-manager` | store | [store-customer-manager.md](store-customer-manager.md) |
 | `store/guard` | store | [store-guard.md](store-guard.md) |
+| `store/supplier-manager` | store | [store-supplier-manager.md](store-supplier-manager.md) |
 | `co-<nip>/buyer` | each customer's own | [customer-buyer.md](customer-buyer.md) |
+| `steelworks/seller` | the supplier's own (invite) | [supplier-seller.md](supplier-seller.md) |
 
 The account id `co-<nip>` comes from the Relay at sign-in. It is never typed by hand.
 

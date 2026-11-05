@@ -54,6 +54,9 @@ export const OutgoingMessage = z.object({
     .object({
       draft_order_id: z.string().max(64).optional(),
       quote_id: z.string().max(64).optional(),
+      /** Medusa order created by the Relay when the store confirms (stamped by the Relay, not the bot). */
+      order_id: z.string().max(64).optional(),
+      order_display_id: z.string().max(32).optional(),
     })
     .optional(),
   lines: z.array(Line).max(50).optional(),
