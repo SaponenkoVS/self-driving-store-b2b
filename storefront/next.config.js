@@ -26,6 +26,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    // Some image hosts (e.g. Wikimedia) rate-limit server-side fetches from
+    // cloud IPs; set NEXT_IMAGES_UNOPTIMIZED=true to let browsers load them directly.
+    unoptimized: process.env.NEXT_IMAGES_UNOPTIMIZED === "true",
     remotePatterns: [
       {
         protocol: "http",
