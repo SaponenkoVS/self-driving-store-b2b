@@ -1,10 +1,8 @@
-import { login } from "@/lib/data/customer"
-import { LOGIN_VIEW } from "@/modules/account/templates/login-template"
-import ErrorMessage from "@/modules/checkout/components/error-message"
-import { SubmitButton } from "@/modules/checkout/components/submit-button"
-import Button from "@/modules/common/components/button"
-import Input from "@/modules/common/components/input"
-import { Checkbox, Text } from "@medusajs/ui"
+import { login } from "@lib/data/customer"
+import { LOGIN_VIEW } from "@modules/account/templates/login-template"
+import ErrorMessage from "@modules/checkout/components/error-message"
+import { SubmitButton } from "@modules/checkout/components/submit-button"
+import Input from "@modules/common/components/input"
 import { useActionState } from "react"
 
 type Props = {
@@ -16,14 +14,13 @@ const Login = ({ setCurrentView }: Props) => {
 
   return (
     <div
-      className="max-w-sm w-full h-full flex flex-col justify-center gap-6 my-auto"
+      className="max-w-sm w-full flex flex-col items-center"
       data-testid="login-page"
     >
-      <Text className="text-4xl text-neutral-950 text-left">
-        Log in for faster
-        <br />
-        checkout.
-      </Text>
+      <h1 className="text-large-semi uppercase mb-6">Welcome back</h1>
+      <p className="text-center text-base-regular text-ui-fg-base mb-8">
+        Sign in to access an enhanced shopping experience.
+      </p>
       <form className="w-full" action={formAction}>
         <div className="flex flex-col w-full gap-y-2">
           <Input
@@ -43,29 +40,23 @@ const Login = ({ setCurrentView }: Props) => {
             required
             data-testid="password-input"
           />
-          <div className="flex flex-col gap-2 w-full border-b border-neutral-200 my-6" />
-          <div className="flex items-center gap-2">
-            <Checkbox name="remember_me" data-testid="remember-me-checkbox" />
-            <Text className="text-neutral-950 text-base-regular">
-              Remember me
-            </Text>
-          </div>
         </div>
         <ErrorMessage error={message} data-testid="login-error-message" />
-        <div className="flex flex-col gap-2">
-          <SubmitButton data-testid="sign-in-button" className="w-full mt-6">
-            Log in
-          </SubmitButton>
-          <Button
-            variant="secondary"
-            onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
-            className="w-full h-10"
-            data-testid="register-button"
-          >
-            Register
-          </Button>
-        </div>
+        <SubmitButton data-testid="sign-in-button" className="w-full mt-6">
+          Sign in
+        </SubmitButton>
       </form>
+      <span className="text-center text-ui-fg-base text-small-regular mt-6">
+        Not a member?{" "}
+        <button
+          onClick={() => setCurrentView(LOGIN_VIEW.REGISTER)}
+          className="underline"
+          data-testid="register-button"
+        >
+          Join us
+        </button>
+        .
+      </span>
     </div>
   )
 }

@@ -1,14 +1,12 @@
-import { listRegions } from "@/lib/data/regions"
-import LoginTemplate from "@/modules/account/templates/login-template"
 import { Metadata } from "next"
 
+import LoginTemplate from "@modules/account/templates/login-template"
+
 export const metadata: Metadata = {
-  title: "Log in",
-  description: "Log in to your Medusa Store account.",
+  title: "Sign in",
+  description: "Sign in to your STRATA trade account.",
 }
 
-export default async function Login() {
-  const regions = await listRegions()
-
-  return <LoginTemplate regions={regions} />
+export default function Login() {
+  return <LoginTemplate />
 }

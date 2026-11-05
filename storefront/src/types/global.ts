@@ -1,32 +1,24 @@
-import { HttpTypes } from "@medusajs/types"
-import { QueryCompany, QueryEmployee } from "@/types"
-import { QueryApproval, QueryApprovalStatus } from "./approval/query"
+import { StorePrice } from "@medusajs/types"
 
-export enum SpendingLimitResetFrequency {
-  never = "never",
-  daily = "daily",
-  weekly = "weekly",
-  monthly = "monthly",
-  yearly = "yearly",
+export type FeaturedProduct = {
+  id: string
+  title: string
+  handle: string
+  thumbnail?: string
 }
 
-export interface B2BCart extends HttpTypes.StoreCart {
-  completed_at?: string
-  company: QueryCompany
-  promotions?: HttpTypes.StorePromotion[]
-  customer?: HttpTypes.StoreCustomer
-  approvals?: QueryApproval[]
-  approval_status?: QueryApprovalStatus
+export type VariantPrice = {
+  calculated_price_number: number
+  calculated_price: string
+  original_price_number: number
+  original_price: string
+  currency_code: string
+  price_type: string
+  percentage_diff: string
 }
 
-export interface B2BOrder extends HttpTypes.StoreOrder {
-  company: QueryCompany
+export type StoreFreeShippingPrice = StorePrice & {
+  target_reached: boolean
+  target_remaining: number
+  remaining_percentage: number
 }
-
-export interface B2BCustomer extends HttpTypes.StoreCustomer {
-  employee: QueryEmployee | null
-  orders?: HttpTypes.StoreOrder[]
-  cart?: B2BCart[]
-}
-
-export type FilterType = string | string[] | { [key: string]: any }

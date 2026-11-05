@@ -1,42 +1,71 @@
-import { listRegions } from "@/lib/data/regions"
-import FeaturedProducts from "@/modules/home/components/featured-products"
-import Hero from "@/modules/home/components/hero"
-import SkeletonFeaturedProducts from "@/modules/skeletons/templates/skeleton-featured-products"
 import { Metadata } from "next"
-import { Suspense } from "react"
 
-export const dynamicParams = true
+import { listCollections } from "@lib/data/collections"
+import { getRegion } from "@lib/data/regions"
+import CategoryGrid from "@modules/home/components/category-grid"
+import ProductRail from "@modules/home/components/featured-products/product-rail"
+import Hero from "@modules/home/components/hero"
+import PhoneOrdering from "@modules/home/components/phone-ordering"
+import TradeAccountCta from "@modules/home/components/trade-account-cta"
+import TradeBenefits from "@modules/home/components/trade-benefits"
 
 export const metadata: Metadata = {
-  title: "Medusa Next.js Starter Template",
+  title: { absolute: "STRATA Building Supply | Trade building materials delivered to site" },
   description:
-    "A performant frontend ecommerce starter template with Next.js 14 and Medusa.",
+    "Cement, blocks, insulation, drywall, timber, fixings and tools at trade prices. Volume pricing, crane offload delivery and 24/7 phone ordering.",
 }
 
-export async function generateStaticParams() {
-  const countryCodes = await listRegions().then(
-    (regions) =>
-      regions
-        ?.map((r) => r.countries?.map((c) => c.iso_2))
-        .flat()
-        .filter(Boolean) as string[]
-  )
-  return countryCodes.map((countryCode) => ({ countryCode }))
-}
+const RAILS = [
+  { handle: "site-essentials", eyebrow: "Most ordered", title: "Site essentials, always in stock" },
+  { handle: "pallet-deals", eyebrow: "Buy by the pallet", title: "Pallet deals" },
+  { handle: "energy-efficient", eyebrow: "Build to the new WT standards", title: "Energy-efficient build" },
+]
 
 export default async function Home(props: {
   params: Promise<{ countryCode: string }>
 }) {
-  const params = await props.params
+  const { countryCode } = await props.params
 
-  const { countryCode } = params
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    return null
+  }
+
+  const { collections } = await listCollections({
+    fields: "id, handle, title",
+  })
+
+  const byHandle = new Map((collections ?? []).map((collection) => [collection.handle, collection]))
+  const [firstRail, ...otherRails] = RAILS.flatMap((rail) => {
+    const collection = byHandle.get(rail.handle)
+    return collection ? [{ ...rail, collection }] : []
+  })
 
   return (
-    <div className="flex flex-col gap-y-2 m-2">
+    <>
       <Hero />
-      <Suspense fallback={<SkeletonFeaturedProducts />}>
-        <FeaturedProducts countryCode={countryCode} />
-      </Suspense>
-    </div>
+      <TradeBenefits />
+      <CategoryGrid />
+      {firstRail && (
+        <ProductRail
+          collection={firstRail.collection}
+          region={region}
+          eyebrow={firstRail.eyebrow}
+          title={firstRail.title}
+        />
+      )}
+      <PhoneOrdering />
+      {otherRails.map((rail) => (
+        <ProductRail
+          key={rail.handle}
+          collection={rail.collection}
+          region={region}
+          eyebrow={rail.eyebrow}
+          title={rail.title}
+        />
+      ))}
+      <TradeAccountCta />
+    </>
   )
 }

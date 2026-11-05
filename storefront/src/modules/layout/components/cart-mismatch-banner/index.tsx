@@ -1,15 +1,18 @@
 "use client"
 
-import { transferCart } from "@/lib/data/customer"
+import { transferCart } from "@lib/data/customer"
 import { ExclamationCircleSolid } from "@medusajs/icons"
+import { StoreCart, StoreCustomer } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useState } from "react"
-import { B2BCart, B2BCustomer } from "types/global"
 
-function CartMismatchBanner(props: { customer: B2BCustomer; cart: B2BCart }) {
+function CartMismatchBanner(props: {
+  customer: StoreCustomer
+  cart: StoreCart
+}) {
   const { customer, cart } = props
   const [isPending, setIsPending] = useState(false)
-  const [actionText, setActionText] = useState("Connect cart")
+  const [actionText, setActionText] = useState("Run transfer again")
 
   if (!customer || !!cart.customer_id) {
     return
@@ -18,11 +21,11 @@ function CartMismatchBanner(props: { customer: B2BCustomer; cart: B2BCart }) {
   const handleSubmit = async () => {
     try {
       setIsPending(true)
-      setActionText("Connecting..")
+      setActionText("Transferring..")
 
       await transferCart()
     } catch {
-      setActionText("Connect cart")
+      setActionText("Run transfer again")
       setIsPending(false)
     }
   }
@@ -32,7 +35,7 @@ function CartMismatchBanner(props: { customer: B2BCustomer; cart: B2BCart }) {
       <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
         <span className="flex items-center gap-1">
           <ExclamationCircleSolid className="inline" />
-          Cart is not connected to your account
+          Something went wrong when we tried to transfer your cart
         </span>
 
         <span>·</span>
@@ -40,7 +43,7 @@ function CartMismatchBanner(props: { customer: B2BCustomer; cart: B2BCart }) {
         <Button
           variant="transparent"
           className="hover:bg-transparent active:bg-transparent focus:bg-transparent disabled:text-orange-500 text-orange-950 p-0 bg-transparent"
-          size="small"
+          size="base"
           disabled={isPending}
           onClick={handleSubmit}
         >

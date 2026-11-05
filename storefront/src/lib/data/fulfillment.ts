@@ -1,9 +1,8 @@
 "use server"
 
-import { sdk } from "@/lib/config"
-import { getAuthHeaders, getCacheOptions } from "@/lib/data/cookies"
-import { StoreFreeShippingPrice } from "@/types/shipping-option/http"
+import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
+import { getAuthHeaders, getCacheOptions } from "./cookies"
 
 export const listCartShippingMethods = async (cartId: string) => {
   const headers = {
@@ -19,7 +18,9 @@ export const listCartShippingMethods = async (cartId: string) => {
       `/store/shipping-options`,
       {
         method: "GET",
-        query: { cart_id: cartId },
+        query: {
+          cart_id: cartId,
+        },
         headers,
         next,
         cache: "force-cache",
@@ -31,26 +32,37 @@ export const listCartShippingMethods = async (cartId: string) => {
     })
 }
 
-export const listCartFreeShippingPrices = async (
-  cartId: string
-): Promise<StoreFreeShippingPrice[]> => {
+export const calculatePriceForShippingOption = async (
+  optionId: string,
+  cartId: string,
+  data?: Record<string, unknown>
+) => {
   const headers = {
     ...(await getAuthHeaders()),
   }
 
   const next = {
-    ...(await getCacheOptions("freeShipping")),
+    ...(await getCacheOptions("fulfillment")),
+  }
+
+  const body = { cart_id: cartId, data }
+
+  if (data) {
+    body.data = data
   }
 
   return sdk.client
-    .fetch<{
-      prices: StoreFreeShippingPrice[]
-    }>(`/store/free-shipping/prices`, {
-      method: "GET",
-      query: { cart_id: cartId },
-      headers,
-      next,
-      cache: "force-cache",
+    .fetch<{ shipping_option: HttpTypes.StoreCartShippingOption }>(
+      `/store/shipping-options/${optionId}/calculate`,
+      {
+        method: "POST",
+        body,
+        headers,
+        next,
+      }
+    )
+    .then(({ shipping_option }) => shipping_option)
+    .catch((e) => {
+      return null
     })
-    .then((data) => data.prices)
 }

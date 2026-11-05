@@ -1,6 +1,4 @@
 import { Text, clx } from "@medusajs/ui"
-import CircleMinus from "@/modules/common/icons/circle-minus"
-import CirclePlus from "@/modules/common/icons/circle-plus"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import React from "react"
 
@@ -48,26 +46,34 @@ const Item: React.FC<AccordionItemProps> = ({
   return (
     <AccordionPrimitive.Item
       {...props}
-      className={clx("border-grey-20", "py-3", className)}
+      className={clx(
+        "border-grey-20 group border-t last:mb-0 last:border-b",
+        "py-3",
+        className
+      )}
     >
-      <AccordionPrimitive.Header className="px-1 radix-state-open:pt-8 transition-all duration-300">
-        <AccordionPrimitive.Trigger className="group flex w-full items-center gap-3">
-          <div className="flex items-center gap-4">
-            {customTrigger || <MorphingTrigger />}
-            <Text className="text-xl text-neutral-950 font-normal">
-              {title}
-            </Text>
+      <AccordionPrimitive.Header className="px-1">
+        <div className="flex flex-col">
+          <div className="flex w-full items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Text className="text-ui-fg-subtle text-sm">{title}</Text>
+            </div>
+            <AccordionPrimitive.Trigger>
+              {customTrigger || <MorphingTrigger />}
+            </AccordionPrimitive.Trigger>
           </div>
-        </AccordionPrimitive.Trigger>
-        {subtitle && (
-          <Text as="span" size="small" className="mt-1">
-            {subtitle}
-          </Text>
-        )}
+          {subtitle && (
+            <Text as="span" size="small" className="mt-1">
+              {subtitle}
+            </Text>
+          )}
+        </div>
       </AccordionPrimitive.Header>
       <AccordionPrimitive.Content
         forceMount={forceMountContent}
-        className="radix-state-closed:animate-accordion-close radix-state-open:animate-accordion-open radix-state-closed:pointer-events-none px-1 h-fit"
+        className={clx(
+          "radix-state-closed:animate-accordion-close radix-state-open:animate-accordion-open radix-state-closed:pointer-events-none px-1"
+        )}
       >
         <div className="inter-base-regular group-radix-state-closed:animate-accordion-close">
           {description && <Text>{description}</Text>}
@@ -82,9 +88,11 @@ Accordion.Item = Item
 
 const MorphingTrigger = () => {
   return (
-    <div className="relative w-[18px] h-[18px] rounded-full">
-      <CircleMinus className="absolute inset-0 opacity-0 group-data-[state=open]:opacity-100" />
-      <CirclePlus className="absolute inset-0 opacity-100 group-data-[state=open]:opacity-0" />
+    <div className="text-grey-90 hover:bg-grey-5 active:bg-grey-5 active:text-violet-60 focus:border-violet-60 disabled:text-grey-30 bg-transparent disabled:bg-transparent rounded-rounded group relative p-[6px]">
+      <div className="h-5 w-5">
+        <span className="bg-grey-50 rounded-circle group-radix-state-open:rotate-90 absolute inset-y-[31.75%] left-[48%] right-1/2 w-[1.5px] duration-300" />
+        <span className="bg-grey-50 rounded-circle group-radix-state-open:rotate-90 group-radix-state-open:left-1/2 group-radix-state-open:right-1/2 absolute inset-x-[31.75%] top-[48%] bottom-1/2 h-[1.5px] duration-300" />
+      </div>
     </div>
   )
 }
