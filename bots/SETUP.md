@@ -73,7 +73,7 @@ All four must share **one cloud computer**: the Gateway saves files the others r
 
 1. On `gateway`, open **Routines** and add a routine:
    - trigger: **Webhook**
-   - action: _"Process the incoming webhook as described in your instructions."_
+   - action: _"Process the incoming webhook as described in your instructions, and write your chat log here."_
    - Copy the **webhook URL** and the **key** (`crsr_…`).
 2. From your laptop, create the store invite and register:
 
@@ -105,8 +105,8 @@ Use a **different Grok account** (the customer's). Follow [customer-buyer.md](cu
 1. Create bot `buyer` and paste the prompt from section 3.
 2. Run the section 2 script on the buyer's cloud computer (`RELAY_URL` is already set to https://a8a3-188-117-136-13.ngrok-free.app).
 3. Choose how replies arrive:
-   - **Instant:** a **Webhook** routine with the action _"Process the incoming webhook as described in your instructions."_ Keep its URL and key for step 6.
-   - **Simple:** a routine **every 5 min** with the action _"Check the B2B store for replies (polling)."_
+   - **Instant:** a **Webhook** routine with the action _"Process the incoming webhook as described in your instructions, and write your chat log here."_ Keep its URL and key for step 6.
+   - **Simple:** a routine **every 5 min** with the action _"Check the B2B store for replies (polling), and write your chat log here."_
 
 You can add more customers the same way: one Grok account and one `buyer` bot each. Each signs in with its own Medusa login.
 

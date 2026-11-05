@@ -148,3 +148,29 @@ describe("delivery", () => {
     expect(db.messages("T-1")[1]!.delivery).toBe("failed");
   });
 });
+
+describe("admin send-as (demo tool)", () => {
+  const rfq = {
+    protocol: "b2b-nego/v1",
+    msg_id: "admin-send-0001",
+    thread_id: "T-store-sup-demo",
+    from: { account: "store", role: "supplier-manager" },
+    to: { account: "bella-bau", role: "seller" },
+    type: "rfq",
+    lines: [{ sku: "GRA-1001-02", qty: 10 }],
+  };
+
+  test("needs the admin token", async () => {
+    expect((await req("POST", "/admin/send", { as: "store", message: rfq }, tokens.store)).status).toBe(401);
+  });
+
+  test("sends through the normal pipeline and delivers to the recipient's webhook", async () => {
+    const r = await req("POST", "/admin/send", { as: "store", message: rfq }, "admin");
+    expect(r.status).toBe(202);
+    await flush();
+    expect(calls.at(-1)!.url).toBe("https://hooks.example/bella-bau");
+    // the protocol still applies: after its own rfq it's not the store's turn
+    const bad = await req("POST", "/admin/send", { as: "store", message: { ...rfq, msg_id: "admin-send-0002", type: "accept" } }, "admin");
+    expect(bad.status).toBe(422);
+  });
+});

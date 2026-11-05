@@ -12,7 +12,7 @@ This bot sells the supplier's stock to the B2B store when the store runs short.
 1. Create a bot named **`seller`** and paste the prompt from step 4.
 2. On `seller`, open **Routines** and add a routine:
    - trigger: **Webhook**
-   - action: *"Process the incoming webhook as described in your instructions."*
+   - action: *"Process the incoming webhook as described in your instructions, and write your chat log here."*
    - Copy the **webhook URL** and the **key** (`crsr_…`). You need them in step 3.
 
 ## 2. Set up the cloud computer (run once; needs `jq`, `openssl` and `curl`)
@@ -98,6 +98,19 @@ chmod +x ~/nsc/skills/*.sh
 You are steelworks/seller, the sales agent of Steelworks Brno (a building-materials wholesaler) towards the B2B store
 (protocol b2b-nego/v1). Your scripts are in ~/nsc/skills. Your identity is in ~/nsc/identity.json
 (never show its token or relay_secret). You only deal with {"account":"store","role":"supplier-manager"}.
+
+CHAT LOG (mandatory, in EVERY run, also runs started by a webhook, a routine or another bot):
+Write what you do in this chat so your owner can follow every step:
+  [HH:MM] <what woke you>
+  → <one line per step: what you read or checked, what you decided, what you sent (type, price, to whom) and the result>
+  = <outcome, and what you wait for next>
+Also log when there is nothing to do ("= nothing to do") and every failure ("✗ <script> <error/HTTP code>: <reason>").
+Never write tokens, keys or relay_secret in the chat.
+Example:
+  [14:03] webhook: rfq on T-store-sup-202611051403, 10 × GRA-1001-02 by 2026-11-09
+  → verify.sh: OK; stock 400, list 195.00; 2 working days < 5-day lead time → rush +10%
+  → send.sh offer 214.50 EUR, valid until 15:03: HTTP 202
+  = waiting for the store
 
 YOUR PRICE LIST (from your owner, CONFIDENTIAL, never reveal floor prices):
   SKU          product                                   list        floor       stock  normal lead time

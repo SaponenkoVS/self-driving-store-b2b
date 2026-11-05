@@ -175,12 +175,12 @@ export function createApp(deps: RelayDeps) {
     }
   });
 
-  authed.post("/messages", async (c) => {
-    const me = c.get("account");
-    const parsed = OutgoingMessage.safeParse(await c.req.json().catch(() => null));
+  /** The one path every message takes: validation, identity stamping, Medusa side effects, state machine, delivery. */
+  const submitMessage = async (c: Context, principal: Principal, body: unknown) => {
+    const me = principal.account;
+    const parsed = OutgoingMessage.safeParse(body);
     if (!parsed.success) return c.json({ error: "invalid message", details: parsed.error.flatten() }, 400);
     // Identity comes from the credential, never from the bot: stamp from.user, drop anything the bot claimed.
-    const principal = c.get("principal");
     const { user: _claimedFrom, ...fromParty } = parsed.data.from;
     const { user: _claimedTo, ...toParty } = parsed.data.to;
     const msg = {
@@ -246,6 +246,18 @@ export function createApp(deps: RelayDeps) {
     const ref = result.envelope.ref;
     const order = ref?.order_id ? { order: { order_id: ref.order_id, display_id: ref.order_display_id } } : {};
     return c.json({ ok: true, seq: result.envelope.seq, thread: result.thread, ...order }, 202);
+  };
+
+  authed.post("/messages", async (c) => submitMessage(c, c.get("principal"), await c.req.json().catch(() => null)));
+
+  // Demo/testing: the admin sends a message AS any account (e.g. start a supplier negotiation as the store
+  // without the store bots). Same pipeline as /messages; only the identity comes from the admin's choice.
+  app.post("/admin/send", async (c) => {
+    if (!deps.adminToken || bearer(c) !== deps.adminToken) return c.json({ error: "unauthorized" }, 401);
+    const body = (await c.req.json().catch(() => null)) as { as?: string; message?: unknown } | null;
+    const account = body?.as ? db.account(body.as) : null;
+    if (!account) return c.json({ error: "unknown account in 'as'" }, 404);
+    return submitMessage(c, { account, customer_id: null, employee_id: null, name: "admin", email: null }, body?.message);
   });
 
   // Threads the caller takes part in. ?pending=1 → only threads waiting on the caller (what to do on wake-up).
