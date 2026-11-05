@@ -3,7 +3,8 @@ import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { Envelope, OutgoingMessage, initialThread, transition, PROTOCOL } from "@nsc/protocol";
 import { Bus } from "./bus";
-import { RelayDb, type Account } from "./db";
+import { RelayDb, type Account, type Principal } from "./db";
+import { RateLimiter, type CustomerDirectory } from "./directory";
 import { Deliverer } from "./deliver";
 import { LIVE_HTML } from "./live-page";
 
@@ -14,9 +15,12 @@ export interface RelayDeps {
   adminToken: string;
   /** Optional token for the public /live view; empty = open. */
   liveToken?: string;
+  /** Verifies customer bot logins (email + company name + NIP). Absent = customer login disabled. */
+  directory?: CustomerDirectory;
+  loginLimiter?: RateLimiter;
 }
 
-type Vars = { Variables: { account: Account } };
+type Vars = { Variables: { account: Account; principal: Principal } };
 
 const InviteBody = z.object({
   account_id: z.string().regex(/^[a-z0-9-]+$/).max(64),
@@ -30,6 +34,11 @@ const RegisterBody = z.object({
   gateway_key: z.string().max(500).nullable().optional(),
 });
 const GatewayBody = RegisterBody.omit({ invite_code: true });
+const CustomerLoginBody = z.object({
+  email: z.string().trim().email().max(200),
+  company_name: z.string().min(1).max(200),
+  nip: z.string().min(10).max(20),
+});
 
 const bearer = (c: Context) => c.req.header("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
 
@@ -57,18 +66,60 @@ export function createApp(deps: RelayDeps) {
     return c.json(res, 201);
   });
 
+  // ---- customer bot login: email + company name + NIP, checked against Medusa ----
+  const limiter = deps.loginLimiter ?? new RateLimiter();
+  app.post("/customers/auth", async (c) => {
+    if (!deps.directory) return c.json({ error: "customer login is not configured" }, 503);
+    const body = CustomerLoginBody.safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: "email, company_name and nip are required" }, 400);
+
+    const ip = c.req.header("cf-connecting-ip") ?? c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+    const email = body.data.email.trim().toLowerCase();
+    if (!limiter.allow(`ip:${ip}`) || !limiter.allow(`email:${email}`))
+      return c.json({ error: "too many attempts, try again in 10 minutes" }, 429);
+
+    let who;
+    try {
+      who = await deps.directory.verify(body.data);
+    } catch (err) {
+      console.error("customer verify failed", err);
+      return c.json({ error: "store is unavailable, try again" }, 502);
+    }
+    // Same answer for every mismatch: don't reveal which of the three fields was wrong.
+    if (!who) return c.json({ error: "no customer matches this email, company name and NIP" }, 401);
+
+    const { account, token } = await db.issueCustomerCredential(who);
+    return c.json(
+      {
+        customer_id: who.customer_id,
+        employee_id: who.employee_id,
+        name: who.name,
+        email: who.email,
+        company_id: who.company_id,
+        company_name: who.company_name,
+        account: account.id,
+        role: "buyer",
+        token,
+        relay_secret: account.relay_secret,
+      },
+      201,
+    );
+  });
+
   // ---- everything below needs an account token ----
   const authed = new Hono<Vars>();
   authed.use(async (c, next) => {
-    const account = await db.accountByToken(bearer(c));
-    if (!account) return c.json({ error: "unauthorized" }, 401);
-    c.set("account", account);
+    const principal = await db.principalByToken(bearer(c));
+    if (!principal) return c.json({ error: "unauthorized" }, 401);
+    c.set("principal", principal);
+    c.set("account", principal.account);
     await next();
   });
 
   authed.get("/accounts/me", (c) => {
     const { relay_secret: _s, gateway_key: _k, ...me } = c.get("account");
-    return c.json(me);
+    const p = c.get("principal");
+    return c.json({ ...me, customer_id: p.customer_id, employee_id: p.employee_id, user_name: p.name, email: p.email });
   });
 
   authed.put("/accounts/me/gateway", async (c) => {
@@ -84,7 +135,15 @@ export function createApp(deps: RelayDeps) {
     const me = c.get("account");
     const parsed = OutgoingMessage.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: "invalid message", details: parsed.error.flatten() }, 400);
-    const msg = parsed.data;
+    // Identity comes from the credential, never from the bot: stamp from.user, drop anything the bot claimed.
+    const principal = c.get("principal");
+    const { user: _claimedFrom, ...fromParty } = parsed.data.from;
+    const { user: _claimedTo, ...toParty } = parsed.data.to;
+    const msg = {
+      ...parsed.data,
+      from: principal.customer_id ? { ...fromParty, user: principal.customer_id } : fromParty,
+      to: toParty,
+    };
 
     if (msg.from.account !== me.id) return c.json({ error: `token belongs to ${me.id}, not ${msg.from.account}` }, 403);
     if (!db.account(msg.to.account)) return c.json({ error: `unknown account ${msg.to.account}` }, 404);

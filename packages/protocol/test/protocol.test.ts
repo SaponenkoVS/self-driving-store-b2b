@@ -132,3 +132,21 @@ describe("signing", () => {
     expect(await verifyEnvelope(tampered, "s3cret")).toBe(false);
   });
 });
+
+import { normalizeCompanyName, normalizeNip } from "../src";
+
+describe("nip", () => {
+  test("valid NIPs in any format", () => {
+    expect(normalizeNip("526-104-08-28")).toBe("5261040828");
+    expect(normalizeNip("PL 5261040828")).toBe("5261040828");
+  });
+  test("bad checksum or length", () => {
+    expect(normalizeNip("5261040829")).toBeNull();
+    expect(normalizeNip("123")).toBeNull();
+  });
+  test("company names compare loosely", () => {
+    expect(normalizeCompanyName("Bella-Bau Sp. z o.o.")).toBe(normalizeCompanyName("bella bau  sp z o o"));
+    expect(normalizeCompanyName("Żabka Polska")).toBe("zabkapolska");
+    expect(normalizeCompanyName("Bella-Bau Sp. z o.o.")).toBe(normalizeCompanyName("bella bau sp z oo"));
+  });
+});

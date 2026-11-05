@@ -19,6 +19,7 @@ bot ── nego/send.sh ──► Relay ── webhook (Bearer key, HMAC-signed)
 cd apps/relay && cp .env.example .env   # set ADMIN_TOKEN
 bun src/server.ts                       # http://localhost:8787/live
 ```
+Customer bots sign in with email + company name + NIP (`POST /customers/auth`). The Relay checks these with Medusa (`backend` route `POST /bots/customers/verify`, which needs `MEDUSA_URL` and `MEDUSA_SERVICE_TOKEN` = `BOTS_SERVICE_TOKEN`). See [`bots/README.md`](bots/README.md).
 For a public URL during the hackathon: `cloudflared tunnel --url http://localhost:8787`.
 
 ## Onboard an account (one time each)

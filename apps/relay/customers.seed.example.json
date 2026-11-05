@@ -1,0 +1,11 @@
+[
+  {
+    "customer_id": "cus_demo_anna",
+    "employee_id": "emp_demo_anna",
+    "name": "Anna Keller",
+    "email": "anna@bellabau.pl",
+    "company_id": "comp_demo_bella",
+    "company_name": "Bella Bau Sp. z o.o.",
+    "tax_id": "5261040828"
+  }
+]

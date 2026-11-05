@@ -1,12 +1,17 @@
 {
   "name": "night-shift-crew",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "packageManager": "bun@1.3.11",
   "scripts": {
     "build": "turbo run build",
     "test": "turbo run test",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "dev": "bun scripts/dev.ts",
+    "setup": "bun scripts/setup.ts"
   },
   "devDependencies": {
     "turbo": "^2.5.0",

@@ -5,12 +5,14 @@ import {
 } from "@medusajs/framework";
 import { defineMiddlewares } from "@medusajs/medusa";
 import { adminMiddlewares } from "./admin/middlewares";
+import { botsMiddlewares } from "./bots/middlewares";
 import { storeMiddlewares } from "./store/middlewares";
 
 export default defineMiddlewares({
   routes: [
     ...adminMiddlewares,
     ...storeMiddlewares,
+    ...botsMiddlewares,
     {
       matcher: "/store/customers/me",
       middlewares: [

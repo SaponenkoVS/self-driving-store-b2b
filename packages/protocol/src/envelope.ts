@@ -26,6 +26,8 @@ export const COMMITMENT_TYPES: ReadonlySet<MessageType> = new Set([
 export const Party = z.object({
   account: z.string().min(1).max(64).regex(/^[a-z0-9-]+$/),
   role: z.string().min(1).max(64).regex(/^[a-z0-9-]+$/),
+  /** Authenticated customer (employee) id. Set ONLY by the Relay from the sender's credential. */
+  user: z.string().max(64).optional(),
 });
 export type Party = z.infer<typeof Party>;
 

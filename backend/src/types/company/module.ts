@@ -23,6 +23,7 @@ export type ModuleCompany = {
   zip: string | null;
   country: string | null;
   logo_url: string | null;
+  tax_id: string | null;
   currency_code: string | null;
   spending_limit_reset_frequency: ModuleCompanySpendingLimitResetFrequency;
   created_at: Date;
@@ -41,6 +42,7 @@ export type ModuleCreateCompany = {
   zip: string | null;
   country: string | null;
   logo_url: string | null;
+  tax_id?: string | null;
   currency_code: string;
   spending_limit_reset_frequency: ModuleCompanySpendingLimitResetFrequency | null;
 };

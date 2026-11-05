@@ -16,6 +16,8 @@ export const Company = model.define("company", {
   zip: model.text().nullable(),
   country: model.text().nullable(),
   logo_url: model.text().nullable(),
+  /** Tax id (NIP in Poland), digits only. Used to authenticate customer Grok bots. */
+  tax_id: model.text().nullable(),
   currency_code: model.text().nullable(),
   spending_limit_reset_frequency: model
     .enum(["never", "daily", "weekly", "monthly", "yearly"])

@@ -17,6 +17,7 @@
     "seed": "medusa exec ./src/scripts/seed.ts",
     "seed:images": "medusa exec ./src/scripts/download-building-images.ts",
     "seed:catalog": "medusa exec ./src/scripts/seed-building-materials.ts",
+    "seed:bots": "medusa exec ./src/scripts/seed-bot-test.ts",
     "start": "medusa start",
     "dev": "medusa develop",
     "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",

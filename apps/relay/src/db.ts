@@ -13,6 +13,25 @@ export interface Account {
   relay_secret: string;
 }
 
+/** Who is calling: the account, plus the person when it's a customer bot credential. */
+export interface Principal {
+  account: Account;
+  customer_id: string | null;
+  employee_id: string | null;
+  name: string | null;
+  email: string | null;
+}
+
+export interface CustomerIdentity {
+  customer_id: string;
+  employee_id: string | null;
+  name: string;
+  email: string;
+  company_id: string;
+  company_name: string;
+  tax_id: string;
+}
+
 export interface ThreadRow extends ThreadState {
   id: string;
   created_at: string;
@@ -43,6 +62,12 @@ CREATE TABLE IF NOT EXISTS messages (
   PRIMARY KEY (thread_id, seq)
 );
 CREATE INDEX IF NOT EXISTS messages_delivery ON messages (delivery, next_attempt_at);
+-- Per-person credentials for customer bots (email + company name + NIP login).
+CREATE TABLE IF NOT EXISTS credentials (
+  token_hash TEXT PRIMARY KEY, account_id TEXT NOT NULL, customer_id TEXT NOT NULL,
+  employee_id TEXT, name TEXT NOT NULL, email TEXT NOT NULL, created_at TEXT NOT NULL, revoked_at TEXT
+);
+CREATE INDEX IF NOT EXISTS credentials_customer ON credentials (customer_id);
 `;
 
 export async function sha256(text: string): Promise<string> {
@@ -96,9 +121,53 @@ export class RelayDb {
     return { account_id: invite.account_id, account_token: token, relay_secret };
   }
 
-  async accountByToken(token: string): Promise<Account | null> {
-    const row = this.db.query("SELECT * FROM accounts WHERE token_hash = ?").get(await sha256(token));
-    return row ? toAccount(row) : null;
+  async principalByToken(token: string): Promise<Principal | null> {
+    if (!token) return null;
+    const hash = await sha256(token);
+    const row = this.db.query("SELECT * FROM accounts WHERE token_hash = ?").get(hash);
+    if (row) return { account: toAccount(row), customer_id: null, employee_id: null, name: null, email: null };
+    const cred = this.db
+      .query("SELECT * FROM credentials WHERE token_hash = ? AND revoked_at IS NULL")
+      .get(hash) as { account_id: string; customer_id: string; employee_id: string | null; name: string; email: string } | null;
+    if (!cred) return null;
+    const account = this.account(cred.account_id);
+    if (!account) return null;
+    return { account, customer_id: cred.customer_id, employee_id: cred.employee_id, name: cred.name, email: cred.email };
+  }
+
+  /**
+   * After Medusa verified email + company name + NIP: make sure the company has a Relay account
+   * (id "co-<nip>") and issue a new credential for this person. Returns the token once.
+   */
+  async issueCustomerCredential(who: CustomerIdentity) {
+    const account_id = `co-${who.tax_id}`;
+    const token = randomToken("nsc");
+    const token_hash = await sha256(token);
+    const ts = now();
+    this.db.transaction(() => {
+      if (!this.db.query("SELECT 1 FROM accounts WHERE id = ?").get(account_id)) {
+        // The company-level token is never handed out; people use their own credentials.
+        this.db
+          .query(
+            `INSERT INTO accounts (id, name, kind, governed, gateway_url, gateway_key, token_hash, relay_secret, created_at)
+             VALUES (?, ?, 'customer', 0, NULL, NULL, ?, ?, ?)`,
+          )
+          .run(account_id, who.company_name, `unused:${randomToken("x")}`, randomToken("rsec"), ts);
+      } else {
+        this.db.query("UPDATE accounts SET name = ? WHERE id = ?").run(who.company_name, account_id);
+      }
+      this.db
+        .query(
+          "INSERT INTO credentials (token_hash, account_id, customer_id, employee_id, name, email, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(token_hash, account_id, who.customer_id, who.employee_id, who.name, who.email, ts);
+    })();
+    return { account: this.account(account_id)!, token };
+  }
+
+  revokeCustomerCredentials(customer_id: string): number {
+    return this.db.query("UPDATE credentials SET revoked_at = ? WHERE customer_id = ? AND revoked_at IS NULL").run(now(), customer_id)
+      .changes;
   }
 
   account(id: string): Account | null {

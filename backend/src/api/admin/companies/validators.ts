@@ -18,6 +18,7 @@ export const AdminCreateCompany = z
     zip: z.string().optional(),
     country: z.string().optional(),
     logo_url: z.string().optional(),
+    tax_id: z.string().optional().nullable(),
   })
   .strict();
 
@@ -34,6 +35,7 @@ export const AdminUpdateCompany = z
     zip: z.string().optional(),
     country: z.string().optional(),
     logo_url: z.string().optional().nullable(),
+    tax_id: z.string().optional().nullable(),
   })
   .strict();
 

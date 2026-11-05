@@ -96,6 +96,15 @@
           "nullable": true,
           "mappedType": "text"
         },
+        "tax_id": {
+          "name": "tax_id",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
+        },
         "currency_code": {
           "name": "currency_code",
           "type": "text",
