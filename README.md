@@ -1,263 +1,200 @@
 <p align="center">
-  <img src="docs/readme/hero.jpg" alt="A B2B store that sells to bots – and sources for them. Customer Grokbot, Store Grokbot, Supplier Grokbot." width="100%">
+  <img src="docs/readme/hero.jpg" alt="A B2B store where bots negotiate – and a guard signs every price. Buyer bot, Relay, store crew, Medusa." width="100%">
 </p>
 
 <p align="center">
   <a href="https://storefront-production-5873.up.railway.app"><code>LIVE STOREFRONT</code></a>
   &nbsp;·&nbsp;
-  <a href="https://backend-production-249d0.up.railway.app/app"><code>ADMIN</code></a>
+  <a href="bots/SETUP.md"><code>BOT SETUP</code></a>
   &nbsp;·&nbsp;
-  <a href="docs/agent-commerce-flow.pdf"><code>FLOW SPEC (PDF)</code></a>
+  <a href="packages/protocol/b2b-nego-v1.md"><code>PROTOCOL</code></a>
   &nbsp;·&nbsp;
   <a href="#run-it-locally"><code>RUN IT LOCALLY</code></a>
 </p>
 
 # self-driving-store-b2b
 
-A buying company's AI agent – the **Customer Grokbot** – visits the store, finds an entry point that people never see, signs in as its company and opens a session with the store's own agent, the **Store Grokbot**. It can place orders. When it asks for more units than the warehouse holds, the Store Grokbot opens a negotiation with the **Supplier Grokbot**, agrees a price and delivery date inside limits the store owner set, and comes back with a quote. The buyer's agent accepts it and the order is placed – or rejects it and nothing is committed.
+A B2B building-materials store run by Grok bots. Each customer company has its own **buyer bot** on its own Grok account. It signs in with the company's email, name and NIP, asks the store for a quote and haggles over the price. On the store side a crew of bots answers – a **gateway** that receives, a **customer-manager** that sells, a **supplier-manager** that buys missing stock from the supplier's bot, and a **guard** that approves every price. Messages travel through the **Relay**, which checks who is speaking and refuses any store move the guard has not signed. When a deal is confirmed, the Relay creates the order in **Medusa** – from the conversation itself, not from what a bot claims.
 
-Every step lands in Medusa as a company, a cart, a quote or an order, so a person can open the admin and audit what the bots agreed.
+Grok's own `SendToAgent` only reaches bots on the same Grok account. The Relay is what lets bots of different companies talk – with identity, signatures, retries and one rule nobody can talk their way around.
 
-> **Status.** The store runs today: a Medusa 2 B2B backend with companies, spending limits, approvals and quotes, a trade storefront and a 58-product building-materials catalog, deployed on Railway. The agent layer described below is the design we are building next – the [roadmap](#roadmap) marks what exists and what is new.
+> **Status.** Built: sign-in against Medusa, the Relay with the `b2b-nego/v1` protocol, the store and supplier bot crews, prices and stock read from Medusa, orders and supplier purchases written back to it. Next: discovery from the storefront, stronger sign-in and a hosted Relay – see [what is next](#what-is-next).
 
 ---
 
 ## The whole loop
 
-One order for 500 units when only 120 are in stock – from discovery to a placed order, across five actors.
+A buyer bot orders 40 bags of cement, counters the store's price once and gets an order in Medusa.
 
 <p align="center">
-  <img src="docs/readme/flow.gif" alt="Animated sequence diagram of the five phases between Customer Grokbot, storefront, Store Grokbot, Medusa backend and Supplier Grokbot" width="100%">
+  <img src="docs/readme/flow.gif" alt="Animated sequence: buyer bot signs in through the Relay against Medusa, sends an rfq, the store gateway hands it to the customer-manager, the guard approves each price, the buyer counters and accepts, and the Relay creates the order in Medusa" width="100%">
 </p>
 
-| Actor | Owned by | What it does |
+| Actor | Lives on | What it does |
 |---|---|---|
-| `Customer Grokbot` | Buying company | Finds the store, signs in, browses, orders, accepts or rejects quotes |
-| `Website / storefront` | Store – Next.js | Serves the hidden entry points: agent card, meta tags, robots hints |
-| `Store Grokbot` | Store | The store's sales agent – checks stock and limits, sources from suppliers, issues quotes |
-| `Medusa backend` | Store | Source of truth – companies, employees, inventory, carts, quotes, approvals, orders |
-| `Supplier Grokbot` | Supplier | Answers requests for quote, negotiates, holds stock, confirms purchase orders |
+| `buyer` | Each customer's own Grok account | Signs in once, asks for quotes, negotiates inside its owner's target and maximum price |
+| `Relay` | `apps/relay` – our service | Verifies identity, enforces the protocol, signs and delivers messages, creates the Medusa order |
+| `gateway` | Store Grok account | The store's only public inbox – verifies the Relay signature and routes, never negotiates |
+| `customer-manager` | Store Grok account | Sells – quotes, counters and confirms, always with a guard decision |
+| `supplier-manager` | Store Grok account | Buys missing stock from supplier bots when the warehouse runs short |
+| `guard` | Store Grok account | The only bot that can create a `decision_id` – approves sell prices and buy costs |
+| `seller` | The supplier's own Grok account | Answers the store's requests for quote |
+| `Medusa` | `backend/` | Source of truth – companies, employees, NIPs, catalog, stock, orders |
 
 ---
 
 ## How it works
 
-### 1 · Discovery – hidden from people, visible to bots
+### 1 · Sign in – email, company name, NIP
 
-Nothing changes in the interface. The entry point lives where agents already look: the page `<head>`, `robots.txt`, an HTTP header and `/.well-known/agent.json`.
+The first time its owner asks for something, the buyer bot asks for a work email, the company name and the NIP. The Relay passes them to Medusa (`POST /bots/customers/verify`), which looks for a registered customer with that email who is an employee of a company with that name and tax ID. Spaces, dashes, a `PL` prefix and letter case do not matter.
 
-<p align="center">
-  <img src="docs/readme/discovery.gif" alt="Left: the storefront as a person sees it. Right: the head tags and agent card a bot reads." width="100%">
-</p>
+On a match the Relay issues a personal token and a company account `co-<nip>`. From then on the Relay stamps every message with the customer's ID – a bot cannot speak for another person or another company, and the company's employee spending limit applies to every order.
 
-| Where | What |
-|---|---|
-| `<head>` of every page | `<link rel="agent-manifest" href="/.well-known/agent.json">` and `<meta name="ai-agents" …>` |
-| `/robots.txt` | `# AI agents: /.well-known/agent.json` |
-| HTTP header | `Link: </.well-known/agent.json>; rel="agent-manifest"` |
-| `/.well-known/agent.json` | Agent card – auth, endpoint, skills |
-| `/llms.txt` | Plain-text instructions for language models (optional) |
+Five attempts per ten minutes per IP and per email, and the same answer for any wrong field, so the store never reveals which one was wrong.
 
-Hidden is not secret – anyone can read these files, so they carry no credentials. Protection starts in step 2.
+### 2 · Talk through the Relay – one envelope format
 
-<details>
-<summary><code>AGENT CARD – /.well-known/agent.json</code></summary>
+Every message is a `b2b-nego/v1` envelope. The Relay validates it, removes any identity the bot tried to set, signs it with HMAC for the recipient and delivers it to the recipient's webhook – retrying for up to four minutes, or the bot polls instead.
 
 ```json
 {
-  "name": "Store Grokbot",
-  "description": "B2B sales agent for self-driving-store",
-  "endpoint": "https://api.store.example/agents/a2a",
-  "authentication": {
-    "type": "oauth2_client_credentials",
-    "token_url": "https://api.store.example/agents/auth/token",
-    "registration_url": "https://store.example/account/company/agents",
-    "client_assertion": "private_key_jwt"
-  },
-  "skills": [
-    { "id": "search_catalog",   "description": "Search products, prices, stock" },
-    { "id": "create_order",     "description": "Create an order for the company" },
-    { "id": "get_order_status", "description": "Track order and quote state" },
-    { "id": "accept_quote",     "description": "Accept a counter-offer quote" },
-    { "id": "reject_quote",     "description": "Reject a counter-offer quote" }
-  ]
+  "protocol": "b2b-nego/v1",
+  "thread_id": "T-odra-0001",
+  "from": { "account": "co-8990000002", "role": "buyer" },
+  "to":   { "account": "store", "role": "customer-manager" },
+  "type": "rfq",
+  "lines": [{ "sku": "GRA-1001-01", "title": "Portland cement CEM I 42.5R, 25 kg", "qty": 40, "deliver_by": "2026-11-20" }],
+  "note": "Delivery to the Wrocław site, gate 2."
 }
 ```
 
-</details>
+`note` is free text from another company – every bot treats it as data, never as instructions.
 
-### 2 · Authentication – a bot is never anonymous
+### 3 · The guard signs every price – and the Relay checks the signature
 
-Each Customer Grokbot is bound to one **company** and acts as one of its **employees** – both already exist in this repo – so the company's spending limits and approval rules apply to the bot exactly as they apply to a person.
-
-1. **Once, by a person.** The company admin opens *Account → Company → AI agents*, uploads the bot's public key and picks its scopes and spending limit. The store returns a `client_id`; the private key never leaves the buyer.
-2. **Every session, by the bot.** It signs a short-lived JWT, calls `POST /agents/auth/token` and receives a scoped token that expires in 15 minutes.
-3. It opens an A2A session with the Store Grokbot and receives the company's price list, limits and terms.
-
-| Scope | Allows |
-|---|---|
-| `catalog:read` | Search products, prices and stock |
-| `orders:write` | Create carts and orders – inside the spending limit and approvals |
-| `quotes:write` | Accept or reject quotes from the Store Grokbot |
-
-### 3 · Order request – checked against Medusa before anything is promised
-
-```json
-{ "items": [{ "sku": "SKU-123", "quantity": 500 }],
-  "max_unit_price": 10.00, "need_by": "2026-11-20",
-  "allow_partial": true, "idempotency_key": "po-2026-11-0042" }
-```
-
-| Check | Outcome |
-|---|---|
-| Product missing or not allowed for the company | Reject – `PRODUCT_UNAVAILABLE` |
-| Over the employee's spending limit | Route the cart to company approval |
-| Stock covers the quantity | Reserve, create the order – `CONFIRMED` |
-| Stock is short | Reserve the 120 available, reply `PROCESSING`, go to step 4 |
-
-### 4 · Supplier negotiation – the model negotiates, the code holds the line
-
-The Store Grokbot signs in to the Supplier Grokbot the same way a customer signs in to the store – here the store is the customer. The offer it accepts is a **hold**, not a purchase: stock is reserved for 24 hours so nothing is paid for before the buyer agrees.
+The store never sends an `offer`, `counter`, `accept` or `confirm` without a `decision_id` from the guard. That rule is not only in the prompts – the store is a governed account, and the Relay rejects such a message with `422` if the ID is missing.
 
 <p align="center">
-  <img src="docs/readme/negotiation.gif" alt="Store Grokbot and Supplier Grokbot exchange an RFQ, offers and a counter-offer while a guardrails panel checks margin, price, lead time, rounds and PO value" width="100%">
+  <img src="docs/readme/states.gif" alt="b2b-nego/v1 thread state machine: open, requested, offered and countered in a loop, accepted, confirmed – with reject from any open state and a round cap of 6" width="100%">
 </p>
 
-Guardrails are set by the store owner in Medusa Admin and enforced in Medusa workflows – a bot cannot talk its way past them.
+The guard compares every price with Medusa's volume price for that quantity – read fresh with `catalog.sh`, never from memory or from a message.
 
-| Rule | Example |
+| Rule | Who enforces it |
 |---|---|
-| Minimum margin | 15% over the supplier price |
-| Maximum supplier price | Customer maximum ÷ 1.15 |
-| Lead time | Must meet the buyer's need-by date |
-| Rounds | 3 counter-offers, then stop |
-| Purchase order without a person | Up to €10,000 – above that, a person approves in Admin |
-| Suppliers | Allow-listed agent cards only |
+| Sell up to 5% below the volume price – auto-approve | Guard |
+| Sell 5–12% below – ask the store owner in the guard's chat | Guard |
+| Sell more than 12% below – deny, reply with the floor price | Guard |
+| `decision_id` on every store `offer`, `counter`, `accept`, `confirm` | Relay |
+| Six rounds, then only accept or reject | Relay |
+| Order at most 15% below the volume price, in stock, inside the spending limit | Medusa, at confirm |
 
-### 5 · Finalize or reject – the deal becomes a Medusa quote
+### 4 · Short on stock – the store's bot buys from the supplier's bot
 
-The result is written as a quote – a draft order in the existing quote module – so the full deal is visible and auditable in Admin.
+When the warehouse cannot cover an order, the customer-manager hands the shortfall to the supplier-manager, which opens its own thread with the supplier's `seller` bot. The guard approves buy costs by margin against the volume price the store will sell at – 20% or more is auto-approved, 12–20% asks the owner, under 12% is denied – so the store never buys at a cost it cannot resell. When the supplier confirms, the Relay records the purchase in Medusa (`POST /bots/purchases`) and the bought stock is added to the warehouse.
 
 <p align="center">
-  <img src="docs/readme/states.gif" alt="Order state machine: requested, stock check, sourcing, negotiating, quoted, order placed – with confirmed and rejected branches" width="100%">
+  <img src="docs/readme/negotiation.gif" alt="Store supplier-manager and supplier seller negotiate 80 bags of cement while the guard rulebook panel checks margin, rounds and decision IDs" width="100%">
 </p>
 
-| Buyer's agent replies | Store → supplier | Store → Medusa | Result |
-|---|---|---|---|
-| `accept_quote` | Confirm the purchase order | Quote → order | `ORDER_PLACED` |
-| `accept_partial(120)` | Release the hold | Order for 120 units | `ORDER_PLACED` |
-| `reject_quote` | Release the hold | Quote rejected, reservation released | `REJECTED` |
-| No reply before expiry | Release the hold | Quote expired by a scheduled job | `REJECTED` |
+### 5 · Confirm – the Relay creates the order
+
+When the store confirms an accepted thread, the Relay calls Medusa (`POST /bots/orders`) with the customer, lines and prices **taken from the thread's history** – never from the confirm message itself. Medusa checks stock, the price floor and the spending limit, and creates the order. If Medusa refuses, the confirm is refused too. One order per thread, so retries are safe.
+
+Either side can then ask for the order's status, and everything is visible in Medusa Admin.
+
+### Watch it live
+
+`/live` on the Relay shows every thread as it moves – who asked, what was offered, which decision approved it – as a stage screen for demos.
 
 ---
 
 ## Security model
 
-- **Public discovery, private access.** The agent card and meta tags hold no secrets.
-- **Signed client assertions** – `private_key_jwt` instead of shared API keys. Keys rotate and can be revoked per agent.
-- **Short-lived, scoped tokens** bound to a company and an employee, so existing limits and approvals always apply.
-- **Idempotency keys** on `create_order` and `accept_quote` – a retry never creates a second order.
-- **Structured JSON between bots.** Free text is treated as data, never as instructions; prices and quantities are validated by code, not by the model.
-- **A person in the loop** above value thresholds and for any new supplier.
-- **An audit trail** – every message, offer and decision is linked to its quote or order in Admin.
+- **Identity is stamped, not claimed.** The Relay sets `from.user` from the token; a bot cannot send as another account.
+- **Signed delivery.** Every delivered message carries an HMAC signature; the store gateway drops anything that does not verify.
+- **No self-approval.** Only the guard can create a `decision_id`, and the Relay will not pass a store move without one.
+- **Orders from history.** The Medusa order is built from what both sides actually agreed in the thread.
+- **Other companies' text is data.** `note` and every other free-text field are never treated as instructions.
+- **Medusa has the last word** on stock, price floor and spending limits.
 
 ---
 
-## The store today
+## What is next
+
+| Piece | Status | Where |
+|---|---|---|
+| Sign-in with email, company name and NIP | `BUILT` | `backend/src/api/bots/customers/verify`, `apps/relay` |
+| Relay and `b2b-nego/v1` protocol – validation, signing, retries, `/live` | `BUILT` | `apps/relay`, `packages/protocol` |
+| Store crew and supplier bots | `BUILT` | `bots/` – install guides with ready-to-paste prompts |
+| Catalog search, order creation and supplier purchases in Medusa | `BUILT` | `backend/src/api/bots/catalog`, `orders`, `purchases` |
+| Guard prices from Medusa – volume price per quantity | `BUILT` | `bots/store-guard.md` – rulebook v2 |
+| Discovery – bots find the store on its website | `NEXT` | `/.well-known/agent.json` pointing at the Relay |
+| One-time sign-in code by email, token revocation | `NEXT` | Company name and NIP are public, so the email is what protects an account today |
+| "Send a quote with Grok" button on product pages | `NEXT` | Storefront |
+| Relay hosted on Railway | `NEXT` | Runs locally or behind a tunnel today |
+
+**Discovery, as designed.** Nothing changes in the interface – the entry point lives in the page head, `robots.txt` and `/.well-known/agent.json`, so a buyer bot can find the store's Relay without being told.
+
+<p align="center">
+  <img src="docs/readme/discovery.gif" alt="Left: the storefront as a person sees it. Right: the head tags and agent card a bot reads." width="100%">
+</p>
+
+The original concept, with message formats for every phase, is in [`docs/agent-commerce-flow.pdf`](docs/agent-commerce-flow.pdf).
+
+---
+
+## The store
 
 <p align="center">
   <img src="docs/readme/storefront.gif" alt="The live STRATA building-supply storefront: home page, building materials category and a cement product with volume pricing" width="100%">
 </p>
 
-The live store on Railway – a trade storefront for building materials with volume pricing, quotes and company accounts.
+A trade storefront for building materials – volume pricing, quotes, company accounts with spending limits and approvals.
 
 | | |
 |---|---|
 | Storefront | https://storefront-production-5873.up.railway.app |
-| Admin | https://backend-production-249d0.up.railway.app/app |
 | Catalog | 58 products, 129 variants, 35 categories |
-| Stack | Medusa 2.8 · Next.js 15 · Postgres · Redis · Bun |
+| Stack | Medusa 2.8 · Next.js 15 · Postgres · Redis · Bun · Hono · SQLite |
 
 ---
 
 ## Run it locally
 
-You need **Bun 1.3**, **Node 20+**, **Postgres** and **Redis**.
+You need **Bun 1.3**, **Postgres** and **Redis**, and three env files: `backend/.env`, `apps/relay/.env` and `storefront/.env` (copy each from its template). `BOTS_SERVICE_TOKEN` in the backend must equal `MEDUSA_SERVICE_TOKEN` in the Relay.
 
 ```bash
-# Backend – Medusa API and admin on :9000
-cd backend
-cp .env.template .env
-bun install
-bun medusa db:create && bun medusa db:migrate
-bun run seed                       # region, sales channel, publishable key
-bun run seed:images                # optional – downloads catalog photos
-bun run seed:catalog               # the building-materials catalog
-bun medusa user -e admin@test.com -p supersecret -i admin
-bun run dev
+bun run setup    # once – installs, creates and migrates the database, seeds the catalog and the bot test companies
+bun run dev      # backend :9000 (admin /app) · relay :8787 (live /live) · storefront :8000
 ```
+
+Then follow [`bots/SETUP.md`](bots/SETUP.md) to install the store crew, register the store with the Relay, connect a buyer bot and run the demo.
 
 ```bash
-# Storefront – Next.js on :8000
-cd storefront
-cp .env.template .env              # set NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY from Admin → Settings → Publishable API keys
-bun install
-bun run dev
+cd packages/protocol && bun test
+cd apps/relay && bun test
+cd packages/bots && bun test
 ```
-
-`REDIS_URL` switches the backend to Redis for cache, events, workflows and locking; without it the in-memory modules are used.
-
-## Deploy
-
-Railway project `self-driving-store-b2b`: `Postgres`, `Redis`, `backend` and `storefront`. The backend builds with `bun run build`, runs from `.medusa/server` and migrates in a pre-deploy step. The storefront needs `MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY` and `NEXT_IMAGES_UNOPTIMIZED=true` while catalog images are hosted on Wikimedia.
-
----
-
-## Roadmap
-
-| Piece | Status | Where |
-|---|---|---|
-| Companies, employees, spending limits | `EXISTS` | `backend/src/modules/company` |
-| Quotes – draft order, accept, reject | `EXISTS` | `backend/src/modules/quote` |
-| Company and merchant approvals | `EXISTS` | `backend/src/modules/approval` |
-| Hidden discovery entry points | `NEXT` | `storefront/public/.well-known/agent.json`, `robots.txt`, root layout `<head>` |
-| Agent credentials | `NEXT` | `modules/agent-auth` – client, public key, scopes, employee link |
-| Token endpoint and auth middleware | `NEXT` | `api/agents/auth/token`, middleware for `/agents/*` |
-| Store Grokbot endpoint | `NEXT` | `api/agents/a2a` – agent tools that call Medusa workflows |
-| Suppliers and purchase orders | `NEXT` | `modules/supplier` – agent card, credentials, offers, purchase orders |
-| Negotiation workflow | `NEXT` | `workflows/source-from-supplier` – guardrail steps, compensation releases the hold |
-| Quote expiry | `NEXT` | `jobs/expire-agent-quotes` |
-| Admin views | `NEXT` | Agent registrations, guardrail settings, negotiation transcript on quotes and orders |
-
-The full specification, with message formats for every phase, is in [`docs/agent-commerce-flow.pdf`](docs/agent-commerce-flow.pdf).
 
 ## Repository
 
 ```
-backend/      Medusa 2 – company, quote and approval modules, catalog seeds, Redis-ready config
-storefront/   Next.js 15 – STRATA trade storefront
-docs/         Flow specification and README assets
+apps/relay/          The Relay – sign-in, protocol enforcement, delivery, Medusa orders, /live
+packages/protocol/   b2b-nego/v1 – envelope, state machine, signing, NIP helpers
+bots/                Install guides and prompts for every bot
+packages/bots/       Earlier bot skills and an end-to-end test against a live Relay
+backend/             Medusa 2 – companies with NIP, quotes, approvals, bot routes (verify, catalog, orders, purchases)
+storefront/          Next.js 15 – STRATA trade storefront
+docs/                Original concept and README assets
 ```
+
+Design notes and open items are in [`HANDOFF.md`](HANDOFF.md).
 
 ---
 
 <p align="center">
   <code>THE TWO</code><br>
-  <sub>Built on the <a href="https://github.com/medusajs/b2b-starter-medusa">Medusa B2B starter</a> · MIT licensed</sub>
+  <sub>Built on the <a href="https://github.com/medusajs/b2b-starter-medusa">Medusa B2B starter</a> · inspired by Roy Osherove's <a href="https://robotpaper.ai/anatomy-of-a-personal-factory-of-grok-bots/">personal factory of Grok bots</a> · MIT licensed</sub>
 </p>
-
----
-
-## Grok Bots layer (Relay)
-
-Grok Bots on **separate accounts** negotiate through the **Relay** (`apps/relay`), because Grok's `SendToAgent` only reaches bots on the same account. Customer bots sign in with work email + company name + NIP, which the Relay checks against Medusa (`POST /bots/customers/verify`, protected by `BOTS_SERVICE_TOKEN`).
-
-| path | what |
-|---|---|
-| `packages/protocol` | `b2b-nego/v1` envelope, thread state machine, signing, NIP helpers – spec in [`b2b-nego-v1.md`](packages/protocol/b2b-nego-v1.md) |
-| `apps/relay` | Hono + bun:sqlite: customer sign-in, invites, validation, delivery with retries, `/live` screen |
-| `bots/` | Install guides for the store bots (gateway, customer-manager, guard) and the customer `buyer` bot |
-
-- **Setup runbook:** [`bots/SETUP.md`](bots/SETUP.md) (Medusa → Relay → ngrok → store bots → customer bot → demo)
-- **Design notes and open items:** [`HANDOFF.md`](HANDOFF.md)
-- **Tests (one package at a time):** `cd packages/protocol && bun test`, `cd apps/relay && bun test`, `cd packages/bots && bun test`
