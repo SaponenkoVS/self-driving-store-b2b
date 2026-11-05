@@ -43,7 +43,7 @@ ngrok http --url=https://a8a3-188-117-136-13.ngrok-free.app 8787   # free static
 Check it:
 
 ```sh
-export RELAY_URL=https://<your-static-domain>.ngrok-free.app
+export RELAY_URL=https://a8a3-188-117-136-13.ngrok-free.app
 curl -s $RELAY_URL/health
 curl -s -X POST $RELAY_URL/customers/auth -H 'Content-Type: application/json' \
   -d '{"email":"buyer@bella-bau.test","company_name":"Bella-Bau Sp. z o.o.","nip":"5260250274"}'
@@ -90,7 +90,7 @@ All four must share **one cloud computer**: the Gateway saves files the others r
 3. On the store cloud computer, fill in `~/nsc/env`:
    ```
    ACCOUNT=store
-   RELAY_URL=https://<your-static-domain>.ngrok-free.app
+   RELAY_URL=https://a8a3-188-117-136-13.ngrok-free.app
    RELAY_TOKEN=<account_token>
    RELAY_SECRET=<relay_secret>
    ```
@@ -103,7 +103,7 @@ All four must share **one cloud computer**: the Gateway saves files the others r
 Use a **different Grok account** (the customer's). Follow [customer-buyer.md](customer-buyer.md):
 
 1. Create bot `buyer` and paste the prompt from section 3.
-2. In the section 2 script, replace `https://REPLACE-ME-relay.example` with your `RELAY_URL`, then run it on the buyer's cloud computer.
+2. Run the section 2 script on the buyer's cloud computer (`RELAY_URL` is already set to https://a8a3-188-117-136-13.ngrok-free.app).
 3. Choose how replies arrive:
    - **Instant:** a **Webhook** routine with the action _"Process the incoming webhook as described in your instructions."_ Keep its URL and key for step 6.
    - **Simple:** a routine **every 5 min** with the action _"Check the B2B store for replies (polling)."_
@@ -115,7 +115,7 @@ You can add more customers the same way: one Grok account and one `buyer` bot ea
 Use a **third Grok account** (the supplier's). Follow [supplier-seller.md](supplier-seller.md):
 
 1. Create bot `seller`, paste the prompt from section 4, and add its **Webhook** routine. Keep the URL and key.
-2. In the section 2 script, replace `https://REPLACE-ME-relay.example` with your `RELAY_URL`, then run it on the seller's cloud computer.
+2. Run the section 2 script on the seller's cloud computer (`RELAY_URL` is already set to https://a8a3-188-117-136-13.ngrok-free.app).
 3. From your laptop, create the supplier invite:
    ```sh
    ADMIN=$(grep ^ADMIN_TOKEN= apps/relay/.env | cut -d= -f2-)

@@ -17,7 +17,7 @@ mkdir -p ~/nsc/skills ~/nsc/inbox ~/nsc/outbox ~/nsc/state
 cat > ~/nsc/env <<'EOF'
 ACCOUNT=store
 # From the Relay: an invite from the admin, then register.sh (see README)
-RELAY_URL=
+RELAY_URL=https://a8a3-188-117-136-13.ngrok-free.app
 RELAY_TOKEN=
 RELAY_SECRET=
 EOF

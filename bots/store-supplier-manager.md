@@ -16,6 +16,9 @@ It doesn't need a routine:
 
 ## 2. Set up the cloud computer
 
+This bot shares the store's cloud computer, so it uses the store's `~/nsc/env` and `send.sh` from `store-gateway.md`. The Relay is `RELAY_URL=https://a8a3-188-117-136-13.ngrok-free.app`. Check it with `grep RELAY_URL ~/nsc/env`.
+
+
 ```bash
 echo '{}' > ~/nsc/state/supplier-manager.json
 mkdir -p ~/nsc/memory && touch ~/nsc/memory/supplier-manager.md

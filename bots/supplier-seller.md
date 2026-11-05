@@ -17,11 +17,11 @@ This bot sells the supplier's stock to the B2B store when the store runs short.
 
 ## 2. Set up the cloud computer (run once; needs `jq`, `openssl` and `curl`)
 
-Replace `RELAY_URL` with the store's Relay address.
+`RELAY_URL` is already set to the store's Relay (https://a8a3-188-117-136-13.ngrok-free.app).
 
 ```bash
 mkdir -p ~/nsc/skills ~/nsc/inbox ~/nsc/out ~/nsc/state
-echo 'RELAY_URL=https://REPLACE-ME-relay.example' > ~/nsc/env
+echo 'RELAY_URL=https://a8a3-188-117-136-13.ngrok-free.app' > ~/nsc/env
 
 cat > ~/nsc/skills/register.sh <<'EOF'
 #!/usr/bin/env bash
