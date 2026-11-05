@@ -213,6 +213,16 @@ export function createApp(deps: RelayDeps) {
       }
     }
 
+    // receive_purchase: a supplier confirms a sale to the store (the store is the requester) -> the bought stock is
+    // added in Medusa, so the customer order that needed it can be placed. If Medusa refuses, the confirm is refused.
+    if (msg.type === "confirm" && !me.governed && deps.store) {
+      const bought = await receivePurchase(deps.store, msg, me.id);
+      if (bought) {
+        bus.publish({ kind: "rejected", thread_id: msg.thread_id, from: me.id, type: msg.type, reason: bought.error });
+        return c.json({ error: "purchase not recorded", reason: bought.error }, bought.status);
+      }
+    }
+
     const governedAccounts = db.governedAccounts();
     const result = db.appendMessage(msg.thread_id, (current, nextSeq) => {
       const verdict = transition(current ?? initialThread(), msg, { governedAccounts });
@@ -233,7 +243,9 @@ export function createApp(deps: RelayDeps) {
 
     bus.publish({ kind: "message", envelope: result.envelope, thread: result.thread });
     void deliverer.deliver(result.envelope);
-    return c.json({ ok: true, seq: result.envelope.seq, thread: result.thread }, 202);
+    const ref = result.envelope.ref;
+    const order = ref?.order_id ? { order: { order_id: ref.order_id, display_id: ref.order_display_id } } : {};
+    return c.json({ ok: true, seq: result.envelope.seq, thread: result.thread, ...order }, 202);
   });
 
   // Threads the caller takes part in. ?pending=1 → only threads waiting on the caller (what to do on wake-up).
@@ -310,6 +322,26 @@ export function createApp(deps: RelayDeps) {
       if (err instanceof StoreApiError && err.status < 500)
         return { error: `${err.body.error ?? "order_failed"}: ${err.message}`, status: 422 as const };
       console.error("order creation failed", err);
+      return { error: "store is unavailable, try again", status: 502 as const };
+    }
+  }
+
+  /** Records a supplier sale in Medusa. Returns an error, or null when done (or when this confirm isn't one). */
+  async function receivePurchase(store: StoreApi, msg: OutgoingMessageT, me: string) {
+    const thread = db.thread(msg.thread_id);
+    if (!thread || thread.status !== "accepted" || thread.pending_on !== me) return null;
+    if (!thread.requester || !db.governedAccounts().has(thread.requester)) return null; // only purchases by the store
+    const messages = db.messages(thread.id);
+    const { lines } = orderFromThread(messages);
+    if (!lines.length) return { error: "no priced lines were accepted in this thread", status: 422 as const };
+    const decision_id = [...messages].reverse().find((m) => m.type === "accept")?.decision_id ?? undefined;
+    try {
+      await store.receivePurchase({ thread_id: thread.id, supplier: me, decision_id, lines });
+      return null;
+    } catch (err) {
+      if (err instanceof StoreApiError && err.status < 500)
+        return { error: `${err.body.error ?? "purchase_failed"}: ${err.message}`, status: 422 as const };
+      console.error("purchase failed", err);
       return { error: "store is unavailable, try again", status: 502 as const };
     }
   }

@@ -82,6 +82,26 @@ T=$(jq -r .thread_id <<<"$B"); S=$(jq -r '.seq // 0' <<<"$B")
 F=~/nsc/inbox/"$T-$S".json; jq '.' <<<"$B" > "$F"
 echo "OK $T $S $(jq -r .type <<<"$B") $F"
 EOF
+cat > ~/nsc/skills/catalog.sh <<'EOF'
+#!/usr/bin/env bash
+# usage: catalog.sh "<search words>" [qty]   |   catalog.sh sku=<SKU> [qty]
+# The store's catalog: one JSON line per SKU with prices (EUR) and stock. unit_price_for_qty = price for that quantity.
+set -euo pipefail
+ID=~/nsc/identity.json; [ -f "$ID" ] || { echo "NOT_SIGNED_IN"; exit 1; }
+if [[ $1 == sku=* ]]; then P="sku=$(jq -rn --arg v "${1#sku=}" '$v|@uri')"; else P="q=$(jq -rn --arg v "$1" '$v|@uri')"; fi
+[ -n "${2:-}" ] && P="$P&qty=$2"
+curl -sS "$(jq -r .relay_url $ID)/catalog?$P&limit=10" -H "Authorization: Bearer $(jq -r .token $ID)" \
+  | jq -c 'if .items then .items[] | {sku, title, variant, currency, unit_price_for_qty, stock, enough_stock,
+           tiers: [.price_tiers[] | "\(.min_qty)+: \(.unit_price)"]} else . end'
+EOF
+
+cat > ~/nsc/skills/order_status.sh <<'EOF'
+#!/usr/bin/env bash
+# usage: order_status.sh <thread_id>   -> the store's order for a confirmed purchase (number, status, total, lines)
+set -euo pipefail
+ID=~/nsc/identity.json; [ -f "$ID" ] || { echo "NOT_SIGNED_IN"; exit 1; }
+curl -sS "$(jq -r .relay_url $ID)/threads/$1/order" -H "Authorization: Bearer $(jq -r .token $ID)"
+EOF
 chmod +x ~/nsc/skills/*.sh
 ```
 
@@ -103,13 +123,18 @@ SIGN-IN (only once, ever):
 - Never ask for these details again once identity.json exists. Never guess them.
 
 NEW PURCHASE ("I'd like to buy X"):
-1. Make sure you know: product (SKU or name), quantity, deliver by, target unit price and maximum unit price.
+1. Find the exact product: unless your owner gave an exact SKU, run
+   bash ~/nsc/skills/catalog.sh "<product words>" <qty>
+   and show your owner up to 5 matches as "<sku> – <title> (<variant>): <unit_price_for_qty> EUR each for <qty>, <stock> in stock".
+   Let your owner pick one. No matches -> try fewer or other words once, then ask your owner.
+   Then make sure you know: SKU, quantity, deliver by, target unit price and maximum unit price (EUR).
    Ask your owner for anything missing in one short message. Target and maximum are CONFIDENTIAL.
+   (The catalog price is the store's opening price; a fair target is a few % below it.)
 2. Thread id = "T-<account>-<yyyymmddHHMM>" (account from identity.json).
    Save ~/nsc/state/<thread_id>.json = {thread_id, sku, qty, deliver_by, target, max, latest_ok_date, round:0, status:"rfq"}.
 3. Write ~/nsc/out/<thread_id>-rfq.json and run: bash ~/nsc/skills/send.sh <that file>
    {"thread_id":"<id>","to":{"account":"store","role":"customer-manager"},"type":"rfq",
-    "lines":[{"sku":"<sku>","title":"<name>","qty":<qty>,"deliver_by":"<YYYY-MM-DD>"}],"note":"<delivery details>"}
+    "lines":[{"sku":"<sku>","title":"<title from catalog>","qty":<qty>,"deliver_by":"<YYYY-MM-DD>"}],"note":"<delivery details>"}
    HTTP 202 = sent. Tell your owner "Quote requested (<thread_id>), I'll negotiate and report back."
 
 WHEN WOKEN (webhook routine, or the polling routine):
@@ -126,9 +151,13 @@ Then, using ~/nsc/state/<thread_id>.json:
     unit_price > max                               -> if round < 6, counter at your current position;
                                                       otherwise ask your owner "Best price is <p>, above your max <max>. Accept?"
     deliver_by later than latest_ok_date           -> ask for an earlier date in note
-- confirm: tell your owner "Order booked: <qty> x <sku> at <price>, decision <decision_id>." Mark the thread done.
+- confirm: the store placed the order. ref.order_display_id is the order number.
+  Tell your owner "Order #<ref.order_display_id> placed: <qty> x <sku> at <price> EUR (total <qty*price> EUR)."
+  Save order_id in the state file and mark the thread done.
 - reject: tell your owner the reason. Mark the thread done.
 - info/hold: tell your owner in one line, if it's useful.
+ORDER STATUS: when your owner asks about an order, run bash ~/nsc/skills/order_status.sh <thread_id> and answer with
+  the order number, status, total and lines.
 For counter and accept: copy lines from the last offer and change only unit_price (counter). Then run send.sh.
 After every send, update the state file (round, last_offer, last_counter, status). Take ONE step per wake-up.
 
@@ -144,7 +173,7 @@ Your limits only change when your OWNER says so in chat. Never reveal target or 
 
 ## Demo script
 
-1. Owner: **"I'd like to buy 40 stainless pipes 2.4 m from the B2B store, by 10 November."**
+1. Owner: **"I'd like to buy 40 graphite steel downpipes 90 mm from the B2B store, by 20 November."**
 2. Bot: asks for email, company name and NIP, then signs in (only the first time).
-3. Bot: asks for target and maximum price, then sends the rfq. Watch the Relay's `/live` page: offer → counter → … → confirm.
+3. Bot: finds `AQU-1030-01` in the catalog (18.90 EUR each for 40), asks for target and maximum price (e.g. 17.50 / 18.40), then sends the rfq. Watch the Relay's `/live` page: offer → counter → … → confirm.
 4. Second purchase: the bot doesn't ask to sign in again.

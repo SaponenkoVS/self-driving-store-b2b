@@ -67,6 +67,25 @@ export const BotsCreateOrder = z
   .strict();
 export type BotsCreateOrderType = z.infer<typeof BotsCreateOrder>;
 
+export const BotsReceivePurchase = z
+  .object({
+    thread_id: z.string().min(3).max(64),
+    supplier: z.string().min(1).max(64),
+    decision_id: z.string().max(64).optional(),
+    lines: z
+      .array(
+        z.object({
+          sku: z.string().min(1).max(64),
+          qty: z.number().int().positive().max(1_000_000),
+          unit_price: z.number().positive().optional(),
+        }),
+      )
+      .min(1)
+      .max(50),
+  })
+  .strict();
+export type BotsReceivePurchaseType = z.infer<typeof BotsReceivePurchase>;
+
 export const botsMiddlewares: MiddlewareRoute[] = [
   {
     matcher: "/bots*",
@@ -81,5 +100,10 @@ export const botsMiddlewares: MiddlewareRoute[] = [
     matcher: "/bots/orders",
     method: "POST",
     middlewares: [validateAndTransformBody(BotsCreateOrder)],
+  },
+  {
+    matcher: "/bots/purchases",
+    method: "POST",
+    middlewares: [validateAndTransformBody(BotsReceivePurchase)],
   },
 ];

@@ -29,6 +29,11 @@ class FakeStore implements StoreApi {
     this.orders.push(input);
     return { order_id: "order_1", display_id: 7, status: "pending", total: 728, currency: "EUR", thread_id: input.thread_id };
   }
+  purchases: object[] = [];
+  async receivePurchase(input: object) {
+    this.purchases.push(input);
+    return { received: [] };
+  }
   async order(id: string) {
     return id === "order_1" ? { order_id: "order_1", display_id: 7, status: "pending", total: 728, currency: "EUR", thread_id: "T-1" } : null;
   }
@@ -105,6 +110,7 @@ describe("order on confirm", () => {
     const r = await req("POST", "/messages", msg("store", "confirm", { decision_id: "DEC-2", lines: priced(25) }), storeToken);
     expect(r.status).toBe(202);
     expect(r.json.thread.status).toBe("confirmed");
+    expect(r.json.order).toEqual({ order_id: "order_1", display_id: "7" });
     expect(store.orders).toEqual([
       { customer_id: "cus_anna", thread_id: "T-1", decision_id: "DEC-2", lines: [{ sku: "AQU-1030-01", qty: 40, unit_price: 18.2 }], note: undefined },
     ]);
@@ -131,6 +137,37 @@ describe("order on confirm", () => {
     await negotiate();
     expect((await req("GET", "/threads/T-1/order", undefined, annaToken)).status).toBe(404);
     expect(store.orders).toHaveLength(0);
+  });
+});
+
+describe("purchase on supplier confirm", () => {
+  test("a supplier's confirm to the store records the bought stock in Medusa", async () => {
+    const inv = await req("POST", "/admin/invites", { account_id: "steelworks", name: "Steelworks", kind: "supplier" }, "admin");
+    const sup = (await req("POST", "/accounts/register", { invite_code: inv.json.invite_code, gateway_url: "https://hooks.example/s" })).json
+      .account_token;
+    const m = (from: "store" | "sup", type: string, extra: object = {}) => ({
+      protocol: "b2b-nego/v1",
+      msg_id: `p-${++n}-${Date.now()}`,
+      thread_id: "T-buy-1",
+      from: from === "store" ? { account: "store", role: "supplier-manager" } : { account: "steelworks", role: "seller" },
+      to: from === "store" ? { account: "steelworks", role: "seller" } : { account: "store", role: "supplier-manager" },
+      type,
+      ...extra,
+    });
+    const L = (p?: number) => [{ sku: "GRA-1001-02", qty: 10, ...(p ? { unit_price: p, currency: "EUR" } : {}) }];
+    expect((await req("POST", "/messages", m("store", "rfq", { lines: L() }), storeToken)).status).toBe(202);
+    expect((await req("POST", "/messages", m("sup", "offer", { lines: L(200) }), sup)).status).toBe(202);
+    expect((await req("POST", "/messages", m("store", "accept", { lines: L(200), decision_id: "DEC-B1" }), storeToken)).status).toBe(202);
+    expect(store.purchases).toHaveLength(0);
+    const r = await req("POST", "/messages", m("sup", "confirm"), sup);
+    expect(r.status).toBe(202);
+    expect(store.purchases).toEqual([
+      { thread_id: "T-buy-1", supplier: "steelworks", decision_id: "DEC-B1", lines: [{ sku: "GRA-1001-02", qty: 10, unit_price: 200 }] },
+    ]);
+    // Customer threads are not purchases.
+    await negotiate();
+    await req("POST", "/messages", msg("store", "confirm", { decision_id: "DEC-2" }), storeToken);
+    expect(store.purchases).toHaveLength(1);
   });
 });
 

@@ -53,6 +53,27 @@ F=~/nsc/inbox/"$T-$S-$ID".json
 jq '.' <<<"$B" > "$F"
 echo "OK $T $S $(jq -r .to.role <<<"$B") $(jq -r .type <<<"$B") $F"
 EOF
+cat > ~/nsc/skills/catalog.sh <<'EOF'
+#!/usr/bin/env bash
+# usage: catalog.sh "<search words>" [qty]   |   catalog.sh sku=<SKU> [qty]
+# Products from the store's Medusa (via the Relay): one JSON line per SKU with prices (EUR) and stock.
+# unit_price_for_qty = our volume price for that quantity; stock = units we can sell now. No lines = nothing found.
+set -euo pipefail
+source ~/nsc/env
+if [[ $1 == sku=* ]]; then P="sku=$(jq -rn --arg v "${1#sku=}" '$v|@uri')"; else P="q=$(jq -rn --arg v "$1" '$v|@uri')"; fi
+[ -n "${2:-}" ] && P="$P&qty=$2"
+curl -sS "$RELAY_URL/catalog?$P&limit=10" -H "Authorization: Bearer $RELAY_TOKEN" \
+  | jq -c 'if .items then .items[] | {sku, title, variant, currency, list_price, unit_price_for_qty, stock, enough_stock,
+           tiers: [.price_tiers[] | "\(.min_qty)+: \(.unit_price)"]} else . end'
+EOF
+
+cat > ~/nsc/skills/order_status.sh <<'EOF'
+#!/usr/bin/env bash
+# usage: order_status.sh <thread_id>   -> the Medusa order created when the thread was confirmed
+set -euo pipefail
+source ~/nsc/env
+curl -sS "$RELAY_URL/threads/$1/order" -H "Authorization: Bearer $RELAY_TOKEN"
+EOF
 chmod +x ~/nsc/skills/*.sh
 ```
 
@@ -123,7 +144,7 @@ TOKEN=$(jq -r .token <<<"$LOGIN"); ACC=$(jq -r .account <<<"$LOGIN")
 curl -sS -X POST "$RELAY_URL/messages" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d "{
   \"protocol\":\"b2b-nego/v1\",\"msg_id\":\"selftest-$(date +%s)\",\"thread_id\":\"T-selftest-$(date +%s)\",
   \"from\":{\"account\":\"$ACC\",\"role\":\"buyer\"},\"to\":{\"account\":\"store\",\"role\":\"customer-manager\"},
-  \"type\":\"rfq\",\"lines\":[{\"sku\":\"PIPE-SS-24\",\"qty\":40}]}"
+  \"type\":\"rfq\",\"lines\":[{\"sku\":\"AQU-1030-01\",\"qty\":40}]}"
 ```
 
 Expected result: the Relay's `/live` page shows the rfq as `delivered`, `~/nsc/log.jsonl` gets a `routed` line, and the customer-manager wakes up.

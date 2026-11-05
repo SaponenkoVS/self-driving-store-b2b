@@ -123,29 +123,34 @@ Use a **third Grok account** (the supplier's). Follow [supplier-seller.md](suppl
      -d '{"account_id":"steelworks","name":"Steelworks Brno","kind":"supplier"}' | jq -r .invite_code
    ```
 4. On the seller's cloud computer: `bash ~/nsc/skills/register.sh <invite_code> "<webhook url>" "<crsr_… key>"` → `REGISTERED steelworks`.
-5. Self-test: tell the store's `supplier-manager` in chat *"Source 15 × PIPE-SS-24 for delivery by <date 3 working days from now>"*. Expected on `/live`: rfq → offer 74.80 (rush) → guard asks you (margin 16%) → accept → confirm.
+5. Self-test: tell the store's `supplier-manager` in chat *"Source 10 × GRA-1001-02 for delivery by <date 3 working days from now>"*. Expected on `/live`: rfq → offer 214.50 EUR (rush) → guard asks you (margin 15%) → accept → confirm. The Relay then adds the 10 pallets to the store's stock in Medusa.
 
 ## 6. Run the demo
 
 In the buyer's chat:
 
-1. **You:** "I'd like to buy 40 × PIPE-SS-24 stainless pipe 2.4 m from the B2B store, delivered by 20 November."
+1. **You:** "I'd like to buy 40 graphite steel downpipes 90 mm from the B2B store, delivered by 20 November."
+   The buyer searches the store's catalog and shows you matches; pick **`AQU-1030-01`** (Steel Downpipe 90 mm, 3 m – Graphite).
 2. **buyer:** asks for email, company name and NIP. Answer:
    `buyer@bella-bau.test`, `Bella-Bau Sp. z o.o.`, `5260250274` → "Signed in as Anna Kowalska @ Bella-Bau Sp. z o.o."
 3. If you chose the webhook routine: "Run `bash ~/nsc/skills/set_inbox.sh <buyer webhook url> <key>`" (only once).
-4. **buyer:** asks for target and maximum unit price. Try **target 78, max 84** (CHF).
-5. Watch `$RELAY_URL/live`. The store has only **25** PIPE-SS-24 in stock, so 40 starts the supplier flow:
+4. **buyer:** asks for target and maximum unit price. Try **target 17.50, max 18.40** (EUR).
+5. Watch `$RELAY_URL/live`: rfq → offer 18.90 → counter → … → accept → **confirm with "Medusa order #N"**.
+   The order is in Medusa Admin (Orders) under Bella-Bau, and the buyer reports the order number.
+   Ask the buyer *"what's the status of that order?"* to see `order_status.sh` at work.
+
+**Supplier flow** (needs the supplier account from step 5): ask for **60 × GRA-1001-02** (Portland Cement pallet). The store has 50, so:
    - customer thread: rfq → info ("checking with our supplier")
-   - supplier thread: rfq → offer → (guard / you) → accept/counter → confirm
-   - customer thread: offer → counter → … → accept → confirm
-   Without a supplier account, ask for **25 or fewer** pipes, otherwise the customer thread waits for sourcing.
+   - supplier thread: rfq → offer 214.50 → guard asks you → accept/counter → confirm → +10 pallets in Medusa
+   - customer thread: offer → counter → … → accept → confirm → Medusa order for 60
 
-Where the prices come from:
+Where the prices come from (all live from Medusa via `catalog.sh`, nothing hard-coded on the store side):
 
-- `guard` holds the catalog: PIPE-SS-24 lists at 89 CHF with a cost of 62.
-- Margin of 20% or more is auto-approved, which means a price of **≥ 77.50**.
-- Between 12% and 20% (**70.46–77.49**), the guard asks **you in the guard's chat** for YES/NO.
-- Below 70.46 it is denied.
+- **Volume price:** AQU-1030-01 costs 19.90 for 1–19 pieces, **18.90 for 20–59** and 17.91 from 60. The store opens at the volume price for the quantity.
+- **Auto-approved:** the guard approves up to **5% below** it on its own (≥ 17.96 for 40 pieces).
+- **Asks you:** from 5% to 12% below (**16.64–17.95**), the guard asks **you in the guard's chat** for YES/NO.
+- **Denied:** more than 12% below. Medusa also refuses any order more than 15% below the volume price (`BOTS_MAX_DISCOUNT`).
+- **Spending limits:** Medusa refuses orders above the employee's limit. For example, `junior@bella-bau.test` has a 2000 EUR limit, so the confirm is refused and the store rejects the deal politely.
 
 Other logins: `zakupy@nowak-bud.test` / `Nowak Budownictwo S.A.` / `7781401239`, or `junior@bella-bau.test` (same company as Anna).
 
@@ -161,8 +166,12 @@ Other logins: `zakupy@nowak-bud.test` / `Nowak Budownictwo S.A.` / `7781401239`,
 | `/live` shows delivery `failed`                  | Check the gateway key: a 400 usually means a trailing newline, and a 401 means regenerate the key and register again.        |
 | `customer-manager` never wakes                   | The agent IDs in `contacts.json` are wrong, or the bots don't share a cloud computer (see the fallback in store-gateway.md). |
 | Buyer never hears back                           | `set_inbox.sh` wasn't run, or there's no polling routine. `relay_get.sh "/threads?pending=1"` shows what's waiting.          |
+| `catalog.sh` prints `{"error":"catalog is not configured…"}` | The Relay runs without `MEDUSA_URL`. Set it in `apps/relay/.env` and restart the Relay.                         |
+| Store confirm returns 422 `order not created`    | Medusa refused the order: `reason` says why (`insufficient_stock`, `spending_limit_exceeded`, price below floor).            |
 
 ## Known limits (demo)
 
-- **Hard-coded prices:** store prices come from the guard's built-in catalog (PIPE-SS-24, PIPE-SS-30, FLANGE-DN50 in CHF), not from Medusa's EUR building-materials catalog. Ask for those SKUs.
+- **Decisions are local:** the guard's `DEC-L-…` ids live on the store's cloud computer, not in Medusa yet. Medusa does check its own floor price and the spending limit when the order is created.
+- **Purchases skip receiving:** a supplier's confirm adds the stock in Medusa immediately. There's no purchase order or receiving step yet.
+- **Supplier price list is in the prompt:** `supplier-seller.md` has its own list of 3 SKUs. That's the supplier's own data, which is intentional.
 - **Signed-in customers only:** only real Medusa customers who are company employees and whose company has a `tax_id` can sign in.

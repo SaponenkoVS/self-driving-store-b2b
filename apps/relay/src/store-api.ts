@@ -45,10 +45,20 @@ export class StoreApiError extends Error {
   }
 }
 
+export interface ReceivePurchaseInput {
+  thread_id: string;
+  /** Supplier account id on the Relay. */
+  supplier: string;
+  decision_id?: string;
+  lines: OrderLine[];
+}
+
 export interface StoreApi {
   catalog(query: CatalogQuery): Promise<unknown>;
   createOrder(input: CreateOrderInput): Promise<OrderSummary>;
   order(id: string): Promise<OrderSummary | null>;
+  /** A supplier confirmed a sale to the store: add the bought stock in Medusa. */
+  receivePurchase(input: ReceivePurchaseInput): Promise<unknown>;
 }
 
 export class MedusaStoreApi implements StoreApi {
@@ -78,6 +88,10 @@ export class MedusaStoreApi implements StoreApi {
 
   createOrder(input: CreateOrderInput) {
     return this.call("POST", "/bots/orders", input);
+  }
+
+  receivePurchase(input: ReceivePurchaseInput) {
+    return this.call("POST", "/bots/purchases", input);
   }
 
   async order(id: string) {

@@ -174,7 +174,7 @@ The tooling is Bun workspaces (`apps/*`, `packages/*`) plus turbo. `backend/` an
 - **`store-customer-manager.md`:**
   - sells to whichever company sent the rfq (`from.account` + `from.user`) and replies to `{account: <that>, role: "buyer"}`
   - every price goes to the Guard ("APPROVE? …" → "APPROVED … decision_id=…" or "DENIED … floor=…")
-  - prices currently come from **hard-coded hints** (PIPE-SS-24, 89 CHF), not from Medusa
+  - prices and stock come from Medusa via `catalog.sh` (Relay `GET /catalog`)
 - **`store-guard.md`:** approves prices against a local CATALOG and margin rules, and issues local `DEC-L-…` ids. It needs switching to Medusa decisions and the Inbox.
 - **`customer-buyer.md`:** one generic bot that any customer can install.
   - setup scripts: `store_auth.sh`, `send.sh`, `relay_get.sh`, `set_inbox.sh`, `verify.sh`
@@ -212,7 +212,12 @@ Machine rules from the user: one heavy command at a time; use `bun`/`bunx`, neve
 ## 10. Open items / next steps
 1. ~~Run the backend~~ **Done 2026-11-05:** backend type-checks, the migration ran, seeds ran, and sign-in was verified end to end (Relay → Medusa) with the test identities.
 2. **End-to-end with real Grok accounts:** store account (3 bots) and one customer account; sign in → rfq → Guard → offer → counter → accept → confirm; watch `/live`.
-3. **Catalog mismatch:** the bot prompts use SKU `PIPE-SS-24` in CHF, but the seeded catalog is building materials in **EUR**. Align the prompts and demo data with real seeded SKUs.
+3. ~~Catalog mismatch~~ **Done:** bots use real Medusa SKUs in EUR. New routes (service token, called only by the Relay):
+   - `GET /bots/catalog?q=&sku=&qty=&in_stock=` → Relay `GET /catalog` (any signed-in account): volume tiers, `unit_price_for_qty`, stock
+   - `POST /bots/orders` ← Relay, automatically when the store **confirms** an accepted thread. Customer = rfq's `from.user`, lines = last accepted priced lines (never the bot's confirm). Idempotent per thread; checks a floor (`BOTS_MAX_DISCOUNT`, default 15% under the volume price) and the employee spending limit. The confirm gets `ref.order_id` / `ref.order_display_id`.
+   - `GET /bots/orders/:id` → Relay `GET /threads/:id/order` (either party)
+   - `POST /bots/purchases` ← Relay, when a **supplier confirms** a sale to the store: adds the stock in Medusa (no receiving step yet)
+   - Fixed a starter bug: `links/order-company.ts` was one-to-one, so a company's second order failed.
 4. **Medusa calls for the store bots** (contract drafted in `packages/bots/skills/medusa/SKILL.md`):
    - `GET /bots/products?sku=`
    - `POST /bots/draft-orders` (with `from.user` as the customer)
