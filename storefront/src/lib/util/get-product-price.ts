@@ -1,19 +1,8 @@
 import { HttpTypes } from "@medusajs/types"
-import { getPercentageDiff } from "./get-precentage-diff"
+import { getPercentageDiff } from "./get-percentage-diff"
 import { convertToLocale } from "./money"
 
-// TODO: Remove this util and use the AdminPrice type directly
-export type VariantPrice = {
-  calculated_price_number: string
-  calculated_price: string
-  original_price_number: string
-  original_price: string
-  currency_code: string
-  price_type: string
-  percentage_diff: string
-}
-
-export const getPricesForVariant = (variant: any): VariantPrice | null => {
+export const getPricesForVariant = (variant: any) => {
   if (!variant?.calculated_price?.calculated_amount) {
     return null
   }

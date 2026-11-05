@@ -1,18 +1,20 @@
-import OrderCard from "@/modules/account/components/order-card"
-import PreviouslyPurchasedProducts from "@/modules/account/components/previously-purchased"
-import { B2BCustomer } from "@/types/global"
+import { Container } from "@medusajs/ui"
+
+import ChevronDown from "@modules/common/icons/chevron-down"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
-import { Heading } from "@medusajs/ui"
+import CompanyStatusBanner from "@modules/account/components/company/company-status-banner"
 
 type OverviewProps = {
-  customer: B2BCustomer | null
+  customer: HttpTypes.StoreCustomer | null
   orders: HttpTypes.StoreOrder[] | null
-  region?: HttpTypes.StoreRegion | null
 }
 
 const Overview = ({ customer, orders }: OverviewProps) => {
   return (
     <div data-testid="overview-page-wrapper">
+      <CompanyStatusBanner />
       <div className="hidden small:block">
         <div className="text-xl-semi flex justify-between items-center mb-4">
           <span data-testid="welcome-message" data-value={customer?.first_name}>
@@ -29,8 +31,8 @@ const Overview = ({ customer, orders }: OverviewProps) => {
             </span>
           </span>
         </div>
-        <div className="flex flex-col gap py-8 border-t border-gray-200">
-          <div className="flex flex-col gap-y-8 h-full col-span-1 row-span-2 flex-1">
+        <div className="flex flex-col py-8 border-t border-gray-200">
+          <div className="flex flex-col gap-y-4 h-full col-span-1 row-span-2 flex-1">
             <div className="flex items-start gap-x-16 mb-6">
               <div className="flex flex-col gap-y-4">
                 <h3 className="text-large-semi">Profile</h3>
@@ -67,42 +69,66 @@ const Overview = ({ customer, orders }: OverviewProps) => {
 
             <div className="flex flex-col gap-y-4">
               <div className="flex items-center gap-x-2">
-                <Heading level="h3" className="text-xl text-neutral-950">
-                  Recent orders
-                </Heading>
+                <h3 className="text-large-semi">Recent orders</h3>
               </div>
-              <div
-                className="flex flex-col gap-y-2"
+              <ul
+                className="flex flex-col gap-y-4"
                 data-testid="orders-wrapper"
               >
                 {orders && orders.length > 0 ? (
-                  orders
-                    .slice(0, 5)
-                    .map((order) => <OrderCard order={order} key={order.id} />)
+                  orders.slice(0, 5).map((order) => {
+                    return (
+                      <li
+                        key={order.id}
+                        data-testid="order-wrapper"
+                        data-value={order.id}
+                      >
+                        <LocalizedClientLink
+                          href={`/account/orders/details/${order.id}`}
+                        >
+                          <Container className="bg-gray-50 flex justify-between items-center p-4">
+                            <div className="grid grid-cols-3 grid-rows-2 text-small-regular gap-x-4 flex-1">
+                              <span className="font-semibold">Date placed</span>
+                              <span className="font-semibold">
+                                Order number
+                              </span>
+                              <span className="font-semibold">
+                                Total amount
+                              </span>
+                              <span data-testid="order-created-date">
+                                {new Date(order.created_at).toDateString()}
+                              </span>
+                              <span
+                                data-testid="order-id"
+                                data-value={order.display_id}
+                              >
+                                #{order.display_id}
+                              </span>
+                              <span data-testid="order-amount">
+                                {convertToLocale({
+                                  amount: order.total,
+                                  currency_code: order.currency_code,
+                                })}
+                              </span>
+                            </div>
+                            <button
+                              className="flex items-center justify-between"
+                              data-testid="open-order-button"
+                            >
+                              <span className="sr-only">
+                                Go to order #{order.display_id}
+                              </span>
+                              <ChevronDown className="-rotate-90" />
+                            </button>
+                          </Container>
+                        </LocalizedClientLink>
+                      </li>
+                    )
+                  })
                 ) : (
                   <span data-testid="no-orders-message">No recent orders</span>
                 )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-y-4">
-              <div className="flex items-center gap-x-2">
-                <Heading level="h3" className="text-xl text-neutral-950">
-                  Previously purchased items
-                </Heading>
-              </div>
-              <div
-                className="flex flex-col gap-y-2"
-                data-testid="previously-purchased-items-wrapper"
-              >
-                {orders && orders.length > 0 ? (
-                  <PreviouslyPurchasedProducts orders={orders} />
-                ) : (
-                  <span data-testid="no-previously-purchased-items-message">
-                    No previously purchased items
-                  </span>
-                )}
-              </div>
+              </ul>
             </div>
           </div>
         </div>
@@ -111,7 +137,7 @@ const Overview = ({ customer, orders }: OverviewProps) => {
   )
 }
 
-const getProfileCompletion = (customer: B2BCustomer | null) => {
+const getProfileCompletion = (customer: HttpTypes.StoreCustomer | null) => {
   let count = 0
 
   if (!customer) {

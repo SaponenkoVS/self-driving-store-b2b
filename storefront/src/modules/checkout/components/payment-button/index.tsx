@@ -1,33 +1,17 @@
 "use client"
 
-import { isManual, isPaypal, isStripeLike } from "@/lib/constants"
-import { createCartApproval, placeOrder } from "@/lib/data/cart"
-import ErrorMessage from "@/modules/checkout/components/error-message"
-import Button from "@/modules/common/components/button"
-import Spinner from "@/modules/common/icons/spinner"
-import { B2BCart } from "@/types"
-import { ApprovalStatusType } from "@/types/approval/module"
-import { Container, Text, toast } from "@medusajs/ui"
-import { OnApproveActions, OnApproveData } from "@paypal/paypal-js"
-import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js"
+import { isManual, isStripeLike } from "@lib/constants"
+import { placeOrder } from "@lib/data/cart"
+import { HttpTypes } from "@medusajs/types"
+import { Button } from "@medusajs/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState } from "react"
+import ErrorMessage from "../error-message"
+import { formatCheckoutError } from "@modules/cart/components/request-quote/format-checkout-error"
 
 type PaymentButtonProps = {
-  cart: B2BCart
+  cart: HttpTypes.StoreCart
   "data-testid": string
-}
-
-const completeCart = async (cart: B2BCart) => {
-  const response = await placeOrder(cart.id).catch((err) => {
-    if (!err.message.includes("NEXT_REDIRECT")) {
-      throw new Error(err)
-    }
-  })
-
-  if (response?.type === "cart") {
-    throw new Error(response.error.message)
-  }
 }
 
 const PaymentButton: React.FC<PaymentButtonProps> = ({
@@ -40,26 +24,6 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     !cart.billing_address ||
     !cart.email ||
     (cart.shipping_methods?.length ?? 0) < 1
-
-  const { requires_admin_approval, requires_sales_manager_approval } =
-    cart.company?.approval_settings || {}
-
-  const requiresApproval =
-    requires_admin_approval || requires_sales_manager_approval
-
-  const cartApprovalStatus = cart?.approval_status?.status
-
-  // TODO: Add this once gift cards are implemented
-  // const paidByGiftcard =
-  //   cart?.gift_cards && cart?.gift_cards?.length > 0 && cart?.total === 0
-
-  // if (paidByGiftcard) {
-  //   return <GiftCardPaymentButton />
-  // }
-
-  if (requiresApproval && cartApprovalStatus !== ApprovalStatusType.APPROVED) {
-    return <RequestApprovalButton cart={cart} notReady={notReady} />
-  }
 
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
 
@@ -74,92 +38,11 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       )
     case isManual(paymentSession?.provider_id):
       return (
-        <ManualTestPaymentButton
-          notReady={notReady}
-          data-testid={dataTestId}
-          cart={cart}
-        />
-      )
-    case isPaypal(paymentSession?.provider_id):
-      return (
-        <PayPalPaymentButton
-          notReady={notReady}
-          cart={cart}
-          data-testid={dataTestId}
-        />
+        <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
       )
     default:
       return <Button disabled>Select a payment method</Button>
   }
-}
-
-const RequestApprovalButton = ({
-  cart,
-  notReady,
-}: {
-  cart: B2BCart
-  notReady: boolean
-}) => {
-  const [submitting, setSubmitting] = useState(false)
-
-  const { requires_admin_approval, requires_sales_manager_approval } =
-    cart.company?.approval_settings || {}
-
-  const cartApprovalStatus = cart?.approval_status?.status
-
-  const isPendingAdminApproval =
-    cartApprovalStatus === ApprovalStatusType.PENDING
-
-  const createApproval = async () => {
-    setSubmitting(true)
-
-    await createCartApproval(cart.id, cart.customer!.id).catch((err) => {
-      toast.error(err.message)
-    })
-
-    setSubmitting(false)
-  }
-
-  return (
-    <>
-      <Container className="flex flex-col gap-y-2">
-        <Text className="text-neutral-700-950 text-xs text-center">
-          {requires_admin_approval && requires_sales_manager_approval
-            ? "This order requires approval by both a company admin and a sales manager."
-            : requires_admin_approval
-            ? "This order requires approval by a company admin."
-            : "This order requires approval by a sales manager."}
-        </Text>
-        <Button
-          className="w-full h-10 rounded-full shadow-none"
-          disabled={notReady || isPendingAdminApproval}
-          onClick={createApproval}
-          isLoading={submitting}
-        >
-          {isPendingAdminApproval ? "Approval Requested" : "Request Approval"}
-        </Button>
-      </Container>
-    </>
-  )
-}
-
-const GiftCardPaymentButton = ({ cart }: { cart: B2BCart }) => {
-  const [submitting, setSubmitting] = useState(false)
-
-  const handleOrder = async () => {
-    setSubmitting(true)
-    await completeCart(cart)
-  }
-
-  return (
-    <Button
-      onClick={handleOrder}
-      isLoading={submitting}
-      data-testid="submit-order-button"
-    >
-      Place order
-    </Button>
-  )
 }
 
 const StripePaymentButton = ({
@@ -167,7 +50,7 @@ const StripePaymentButton = ({
   notReady,
   "data-testid": dataTestId,
 }: {
-  cart: B2BCart
+  cart: HttpTypes.StoreCart
   notReady: boolean
   "data-testid"?: string
 }) => {
@@ -175,7 +58,7 @@ const StripePaymentButton = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onPaymentCompleted = async () => {
-    await completeCart(cart)
+    await placeOrder()
       .catch((err) => {
         setErrorMessage(err.message)
       })
@@ -253,7 +136,6 @@ const StripePaymentButton = ({
   return (
     <>
       <Button
-        className="w-full"
         disabled={disabled || notReady}
         onClick={handlePayment}
         size="large"
@@ -263,95 +145,19 @@ const StripePaymentButton = ({
         Place order
       </Button>
       <ErrorMessage
-        error={errorMessage}
+        error={formatCheckoutError(errorMessage)}
         data-testid="stripe-payment-error-message"
       />
     </>
   )
 }
 
-const PayPalPaymentButton = ({
-  cart,
-  notReady,
-  "data-testid": dataTestId,
-}: {
-  cart: B2BCart
-  notReady: boolean
-  "data-testid"?: string
-}) => {
+const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onPaymentCompleted = async () => {
-    await completeCart(cart)
-      .catch((err) => {
-        setErrorMessage(err.message)
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
-  }
-
-  const session = cart.payment_collection?.payment_sessions?.find(
-    (s) => s.status === "pending"
-  )
-
-  const handlePayment = async (
-    _data: OnApproveData,
-    actions: OnApproveActions
-  ) => {
-    actions?.order
-      ?.authorize()
-      .then((authorization) => {
-        if (authorization.status !== "COMPLETED") {
-          setErrorMessage(`An error occurred, status: ${authorization.status}`)
-          return
-        }
-        onPaymentCompleted()
-      })
-      .catch(() => {
-        setErrorMessage(`An unknown error occurred, please try again.`)
-        setSubmitting(false)
-      })
-  }
-
-  const [{ isPending, isResolved }] = usePayPalScriptReducer()
-
-  if (isPending) {
-    return <Spinner />
-  }
-
-  if (isResolved) {
-    return (
-      <>
-        <PayPalButtons
-          style={{ layout: "horizontal" }}
-          createOrder={async () => session?.data.id as string}
-          onApprove={handlePayment}
-          disabled={notReady || submitting || isPending}
-          data-testid={dataTestId}
-        />
-        <ErrorMessage
-          error={errorMessage}
-          data-testid="paypal-payment-error-message"
-        />
-      </>
-    )
-  }
-}
-
-const ManualTestPaymentButton = ({
-  notReady,
-  cart,
-}: {
-  notReady: boolean
-  cart: B2BCart
-}) => {
-  const [submitting, setSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const onPaymentCompleted = async () => {
-    await completeCart(cart)
+    await placeOrder()
       .catch((err) => {
         setErrorMessage(err.message)
       })
@@ -369,7 +175,6 @@ const ManualTestPaymentButton = ({
   return (
     <>
       <Button
-        className="w-full"
         disabled={notReady}
         isLoading={submitting}
         onClick={handlePayment}
@@ -379,7 +184,7 @@ const ManualTestPaymentButton = ({
         Place order
       </Button>
       <ErrorMessage
-        error={errorMessage}
+        error={formatCheckoutError(errorMessage)}
         data-testid="manual-payment-error-message"
       />
     </>

@@ -1,49 +1,56 @@
 import { HttpTypes } from "@medusajs/types"
-import { Text } from "@medusajs/ui"
+import { Table, Text } from "@medusajs/ui"
 
-import LineItemOptions from "@/modules/common/components/line-item-options"
-import Thumbnail from "@/modules/products/components/thumbnail"
-import ItemTotalPrice from "./item-total-price"
+import LineItemOptions from "@modules/common/components/line-item-options"
+import LineItemPrice from "@modules/common/components/line-item-price"
+import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
+import Thumbnail from "@modules/products/components/thumbnail"
 
 type ItemProps = {
-  item: HttpTypes.StoreOrderLineItem
-  order: HttpTypes.StoreOrder
+  item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
+  currencyCode: string
 }
 
-const Item = ({ item, order }: ItemProps) => {
+const Item = ({ item, currencyCode }: ItemProps) => {
   return (
-    <tr className="flex gap-x-4">
-      <td className="w-20">
-        <Thumbnail thumbnail={item.thumbnail} size="square" />
-      </td>
-
-      <td className="flex flex-col w-full">
-        <div>
-          <Text className="font-normal" data-testid="product-name">
-            {item.product_title}
-          </Text>
-
-          <LineItemOptions
-            variant={item.variant}
-            data-testid="product-variant"
-          />
+    <Table.Row className="w-full" data-testid="product-row">
+      <Table.Cell className="!pl-0 p-4 w-24">
+        <div className="flex w-16">
+          <Thumbnail thumbnail={item.thumbnail} size="square" />
         </div>
+      </Table.Cell>
 
-        <div className="flex justify-between w-full">
-          <div>
-            <Text className="text-xs">
+      <Table.Cell className="text-left">
+        <Text
+          className="txt-medium-plus text-ui-fg-base"
+          data-testid="product-name"
+        >
+          {item.product_title}
+        </Text>
+        <LineItemOptions variant={item.variant} data-testid="product-variant" />
+      </Table.Cell>
+
+      <Table.Cell className="!pr-0">
+        <span className="!pr-0 flex flex-col items-end h-full justify-center">
+          <span className="flex gap-x-1 ">
+            <Text className="text-ui-fg-muted">
               <span data-testid="product-quantity">{item.quantity}</span>x{" "}
             </Text>
-          </div>
+            <LineItemUnitPrice
+              item={item}
+              style="tight"
+              currencyCode={currencyCode}
+            />
+          </span>
 
-          <div></div>
-
-          <div>
-            <ItemTotalPrice item={item} currencyCode={order.currency_code} />
-          </div>
-        </div>
-      </td>
-    </tr>
+          <LineItemPrice
+            item={item}
+            style="tight"
+            currencyCode={currencyCode}
+          />
+        </span>
+      </Table.Cell>
+    </Table.Row>
   )
 }
 

@@ -1,10 +1,9 @@
 "use server"
 
-import { sdk } from "@/lib/config"
-import { getAuthHeaders, getCacheOptions } from "@/lib/data/cookies"
+import { sdk } from "@lib/config"
+import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { HttpTypes } from "@medusajs/types"
 
-// Shipping actions
 export const listCartPaymentMethods = async (regionId: string) => {
   const headers = {
     ...(await getAuthHeaders()),
@@ -25,7 +24,11 @@ export const listCartPaymentMethods = async (regionId: string) => {
         cache: "force-cache",
       }
     )
-    .then(({ payment_providers }) => payment_providers)
+    .then(({ payment_providers }) =>
+      payment_providers.sort((a, b) => {
+        return a.id > b.id ? 1 : -1
+      })
+    )
     .catch(() => {
       return null
     })
