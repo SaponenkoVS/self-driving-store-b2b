@@ -1,7 +1,6 @@
-import { listProducts } from "@/lib/data/products"
-import { getRegion } from "@/lib/data/regions"
+import { listProducts } from "@lib/data/products"
+import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
-import { Heading } from "@medusajs/ui"
 import Product from "../product-preview"
 
 type RelatedProductsProps = {
@@ -19,42 +18,39 @@ export default async function RelatedProducts({
     return null
   }
 
-  // edit this function to define your related products logic
-  const queryParams: HttpTypes.StoreProductParams & {
-    tags?: string[]
-  } = {}
-  if (region?.id) {
-    queryParams.region_id = region.id
+  const queryParams: HttpTypes.StoreProductListParams = {
+    region_id: region.id,
+    limit: 5,
   }
-  if (product.collection_id) {
+  const categoryId = product.categories?.[0]?.id
+
+  if (categoryId) {
+    queryParams.category_id = [categoryId]
+  } else if (product.collection_id) {
     queryParams.collection_id = [product.collection_id]
   }
-  if (product.tags) {
-    queryParams.tag_id = product.tags
-      .map((t) => t.id)
-      .filter(Boolean) as string[]
-  }
-  queryParams.is_giftcard = false
 
   const products = await listProducts({
     queryParams,
     countryCode,
-  }).then(({ response }) => {
-    return response.products.filter(
-      (responseProduct) => responseProduct.id !== product.id
-    )
-  })
+  }).then(({ response }) =>
+    response.products.filter((responseProduct) => responseProduct.id !== product.id).slice(0, 4)
+  )
 
   if (!products.length) {
     return null
   }
 
   return (
-    <div className="flex flex-col gap-y-6 small:py-16 py-6 small:px-24 px-6 bg-neutral-100">
-      <Heading level="h2" className="text-xl text-neutral-950 font-normal">
-        Other customers also viewed
-      </Heading>
-      <ul className="grid grid-cols-1 small:grid-cols-3 medium:grid-cols-4 gap-x-2 gap-y-8">
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+        Complete the order
+      </p>
+      <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-ink">
+        Often bought for the same job
+      </h2>
+
+      <ul className="mt-8 grid grid-cols-2 small:grid-cols-4 gap-4 small:gap-6">
         {products.map((product) => (
           <li key={product.id}>
             <Product region={region} product={product} />

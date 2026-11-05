@@ -1,27 +1,29 @@
-import { retrieveCustomer } from "@/lib/data/customer"
-import ItemsPreviewTemplate from "@/modules/cart/templates/preview"
-import CheckoutTotals from "@/modules/checkout/components/checkout-totals"
-import PromotionCode from "@/modules/checkout/components/promotion-code"
-import Review from "@/modules/checkout/components/review"
-import Divider from "@/modules/common/components/divider"
-import { B2BCart } from "@/types"
-import { Container } from "@medusajs/ui"
+import { Heading } from "@medusajs/ui"
 
-const CheckoutSummary = async ({ cart }: { cart: B2BCart }) => {
-  const customer = await retrieveCustomer()
+import ItemsPreviewTemplate from "@modules/cart/templates/preview"
+import DiscountCode from "@modules/checkout/components/discount-code"
+import CartTotals from "@modules/common/components/cart-totals"
+import Divider from "@modules/common/components/divider"
 
+const CheckoutSummary = ({ cart }: { cart: any }) => {
   return (
-    <Container className="sticky top-2 h-fit w-full flex flex-col small:mt-10">
-      <ItemsPreviewTemplate
-        items={cart?.items}
-        currencyCode={cart.currency_code}
-      />
-      <Divider className="my-2" />
-      <CheckoutTotals cartOrOrder={cart} />
-      <PromotionCode cart={cart} />
-      <Divider className="my-2" />
-      <Review cart={cart} customer={customer} />
-    </Container>
+    <div className="sticky top-0 flex flex-col-reverse small:flex-col gap-y-8 py-8 small:py-0 ">
+      <div className="w-full bg-white flex flex-col">
+        <Divider className="my-6 small:hidden" />
+        <Heading
+          level="h2"
+          className="flex flex-row text-3xl-regular items-baseline"
+        >
+          In your Cart
+        </Heading>
+        <Divider className="my-6" />
+        <CartTotals totals={cart} />
+        <ItemsPreviewTemplate cart={cart} />
+        <div className="my-6">
+          <DiscountCode cart={cart} />
+        </div>
+      </div>
+    </div>
   )
 }
 

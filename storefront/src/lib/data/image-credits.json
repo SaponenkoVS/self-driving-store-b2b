@@ -1,0 +1,770 @@
+[
+  {
+    "group": "hero-construction-site",
+    "source": "https://commons.wikimedia.org/wiki/File:Residential_construction_site_fall_arrest_system_(9256417162).jpg",
+    "license": "Public domain",
+    "author": "National Institute for Occupational Safety and Health (NIOSH) from USA"
+  },
+  {
+    "group": "hero-construction-site",
+    "source": "https://commons.wikimedia.org/wiki/File:Chantier_de_construction_du_complexe_associatif_multifonctions_%C3%A0_Antony_06.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Lionel Allorge"
+  },
+  {
+    "group": "hero-warehouse",
+    "source": "https://commons.wikimedia.org/wiki/File:Aerial_view_of_trucks_at_building_yard.png",
+    "license": "CC BY-SA 4.0",
+    "author": "GeorgeHillTimber"
+  },
+  {
+    "group": "hero-warehouse",
+    "source": "https://commons.wikimedia.org/wiki/File:Stacks_of_timber.png",
+    "license": "CC BY-SA 4.0",
+    "author": "GeorgeHillTimber"
+  },
+  {
+    "group": "hero-warehouse",
+    "source": "https://commons.wikimedia.org/wiki/File:Modern_warehouse_with_pallet_rack_storage_system.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Axisadman"
+  },
+  {
+    "group": "hero-delivery",
+    "source": "https://commons.wikimedia.org/wiki/File:Forklift_and_pallets_(8155244036).jpg",
+    "license": "CC BY 2.0",
+    "author": "ozz13x"
+  },
+  {
+    "group": "hero-delivery",
+    "source": "https://commons.wikimedia.org/wiki/File:Forklift.jpeg",
+    "license": "CC BY-SA 4.0",
+    "author": "Mdornseif"
+  },
+  {
+    "group": "hero-delivery",
+    "source": "https://commons.wikimedia.org/wiki/File:Still_RX20-15_forklift.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Cjp24"
+  },
+  {
+    "group": "hero-delivery",
+    "source": "https://commons.wikimedia.org/wiki/File:Kazinczy_Stra%C3%9Fe,_Zwei_Lastkraftwagen,_Wienerberger_Porotherm_Entladung,_2021_Orosh%C3%A1za.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Globetrotter19"
+  },
+  {
+    "group": "cement-bags",
+    "source": "https://commons.wikimedia.org/wiki/File:Cements_bags.jpg",
+    "license": "CC0",
+    "author": "Ekeleme Ijeoma"
+  },
+  {
+    "group": "cement-bags",
+    "source": "https://commons.wikimedia.org/wiki/File:Portland_Cement_Bags.jpg",
+    "license": "Public domain",
+    "author": "KVDP"
+  },
+  {
+    "group": "cement-bags",
+    "source": "https://commons.wikimedia.org/wiki/File:Cement_bags_in_Douma.jpg",
+    "license": "CC BY 4.0",
+    "author": "Alex.Simon89"
+  },
+  {
+    "group": "mortar-plaster",
+    "source": "https://commons.wikimedia.org/wiki/File:Wall_Plastering_1.jpg",
+    "license": "CC0",
+    "author": "Abdul Aziz Issah"
+  },
+  {
+    "group": "mortar-plaster",
+    "source": "https://commons.wikimedia.org/wiki/File:Plasterer_at_work_on_a_wall_arp.jpg",
+    "license": "Public domain",
+    "author": "Adrian Pingstone (Arpingstone)"
+  },
+  {
+    "group": "mortar-plaster",
+    "source": "https://commons.wikimedia.org/wiki/File:Sand-cement-render.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Kebabknight"
+  },
+  {
+    "group": "sand-gravel-aggregate",
+    "source": "https://commons.wikimedia.org/wiki/File:Sorted_gravel_pile_from_Pleistocene_glacial_outwash_(St._Louisville_gravel_pits,_Licking_County,_Ohio,_USA)_24_(45396448725).jpg",
+    "license": "CC BY 2.0",
+    "author": "James St. John"
+  },
+  {
+    "group": "sand-gravel-aggregate",
+    "source": "https://commons.wikimedia.org/wiki/File:Lone_pile_of_gravel_-_Hillsboro,_Oregon.JPG",
+    "license": "CC BY-SA 3.0",
+    "author": "M.O. Stevens"
+  },
+  {
+    "group": "sand-gravel-aggregate",
+    "source": "https://commons.wikimedia.org/wiki/File:Pile_of_Sand_for_Building_in_Anambra_State.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Johnnybam"
+  },
+  {
+    "group": "rebar-steel",
+    "source": "https://commons.wikimedia.org/wiki/File:A_bunch_of_rebar_up_close.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "W.carter"
+  },
+  {
+    "group": "rebar-steel",
+    "source": "https://commons.wikimedia.org/wiki/File:Buger_Br%C3%BCcke_Neubau_Armierungseisen_HRS-20240310-RM-151311.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Reinhold Möller Ermell"
+  },
+  {
+    "group": "rebar-steel",
+    "source": "https://commons.wikimedia.org/wiki/File:A_bunch_of_rebar.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "W.carter"
+  },
+  {
+    "group": "bricks-clay",
+    "source": "https://commons.wikimedia.org/wiki/File:Stapel_bakstenen_-_Pile_of_bricks_2005_Fruggo.jpg",
+    "license": "CC BY 1.0",
+    "author": "Fruggo"
+  },
+  {
+    "group": "bricks-clay",
+    "source": "https://commons.wikimedia.org/wiki/File:2015-03-08_Stacks_of_bricks_in_Swayambhunath,Katmandu,Nepal_DSCF3932.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "松岡明芳"
+  },
+  {
+    "group": "bricks-clay",
+    "source": "https://commons.wikimedia.org/wiki/File:Midland_Brick_brickworks_brick_stacks.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Sam Wilson  (taken with Panasonic Lumix DMC-FT1)"
+  },
+  {
+    "group": "concrete-blocks",
+    "source": "https://commons.wikimedia.org/wiki/File:Mau--_Yton_Steine_auf_Palette.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Leo Miregalitheo"
+  },
+  {
+    "group": "concrete-blocks",
+    "source": "https://commons.wikimedia.org/wiki/File:Porenbeton.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "MelKo21"
+  },
+  {
+    "group": "concrete-blocks",
+    "source": "https://commons.wikimedia.org/wiki/File:Siporex-bricks.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Tumi-1983"
+  },
+  {
+    "group": "plasterboard-drywall",
+    "source": "https://commons.wikimedia.org/wiki/File:Taping_gypsum_board_seams_in_back_of_house_rooms_in_the_new_LIRR_passenger_concourse_in_preparation_for_painting_and_final_finishes._4-17-19_(47645209441).jpg",
+    "license": "CC BY 2.0",
+    "author": "MTA Capital Construction Mega Projects"
+  },
+  {
+    "group": "plasterboard-drywall",
+    "source": "https://commons.wikimedia.org/wiki/File:Drywall_and_tools.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Timothyjosephwood"
+  },
+  {
+    "group": "drywall-metal-profiles",
+    "source": "https://commons.wikimedia.org/wiki/File:Metal_stud_framing_for_the_engineering_rooms_located_in_the_LIRR_concourse_area._(CM014B,_07-18-2018)_(28645816477).jpg",
+    "license": "CC BY 2.0",
+    "author": "MTA Capital Construction Mega Projects"
+  },
+  {
+    "group": "drywall-metal-profiles",
+    "source": "https://commons.wikimedia.org/wiki/File:Blue_Grass_Chemical_Agent-Destruction_Pilot_Plant_Control_and_Support_Building_(6195050751).jpg",
+    "license": "CC BY 2.0",
+    "author": "PEO ACWA"
+  },
+  {
+    "group": "drywall-metal-profiles",
+    "source": "https://commons.wikimedia.org/wiki/File:Construction_worker_on_steel_framing_of_hollywoodHUB_at_Hollywood_Transit_Center,_Portland,_Oregon_(January_2026).jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "PortlandAppraisalBlog"
+  },
+  {
+    "group": "joint-compound-bucket",
+    "source": "https://commons.wikimedia.org/wiki/File:Applying_drywall_joint_compound_(5891937812).jpg",
+    "license": "CC BY 2.0",
+    "author": "Georgia National Guard from United States"
+  },
+  {
+    "group": "joint-compound-bucket",
+    "source": "https://commons.wikimedia.org/wiki/File:White_plasterer%27s_bucket.jpg",
+    "license": "CC BY 3.0",
+    "author": "DracoEssentialis"
+  },
+  {
+    "group": "joint-compound-bucket",
+    "source": "https://commons.wikimedia.org/wiki/File:White_plastic_bucket.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Santeri Viinamäki"
+  },
+  {
+    "group": "mineral-wool-insulation",
+    "source": "https://commons.wikimedia.org/wiki/File:Moscow,_Lefortovsky_Val_24,_pile_of_mineral_wool_mats_(31136798850).jpg",
+    "license": "CC BY 2.0",
+    "author": "Gennady Grachev from Moscow, Russia"
+  },
+  {
+    "group": "mineral-wool-insulation",
+    "source": "https://commons.wikimedia.org/wiki/File:06_Thermal_insulation_retrofit_works_on_a_department_store_building_with_mineral_wool_and_Aluthermo_aluminium_composite_mat.jpg",
+    "license": "CC BY 3.0",
+    "author": "Marek Ślusarczyk (Tupungato) Photo portfolio"
+  },
+  {
+    "group": "mineral-wool-insulation",
+    "source": "https://commons.wikimedia.org/wiki/File:Arrangement_Mineralwolle.jpeg",
+    "license": "CC BY-SA 3.0 de",
+    "author": "FMI Fachverband Mineralwolleindustrie"
+  },
+  {
+    "group": "eps-polystyrene-insulation",
+    "source": "https://commons.wikimedia.org/wiki/File:EPS_insulation_board.jpg",
+    "license": "CC0",
+    "author": "Energieeffiziente Dämmstoffe"
+  },
+  {
+    "group": "eps-polystyrene-insulation",
+    "source": "https://commons.wikimedia.org/wiki/File:Siemianowice_Kapicy_styropian_2025.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Adrian Tync"
+  },
+  {
+    "group": "eps-polystyrene-insulation",
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%9F%D0%B5%D0%BD%D0%BE%D0%BF%D0%BB%D0%B0%D1%81%D1%82.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Motokichirou"
+  },
+  {
+    "group": "xps-insulation",
+    "source": "https://commons.wikimedia.org/wiki/File:Styrodur.jpg",
+    "license": "Public domain",
+    "author": "U.S. Army Corps of Engineers Europe District from Wiesbaden, Germany"
+  },
+  {
+    "group": "xps-insulation",
+    "source": "https://commons.wikimedia.org/wiki/File:Graving_etter_Kronborgs%C3%A6terlinna_for_nytt_vann_og_avl%C3%B8pssystem_VA_i_2016_Q.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Øyvind Holmstad"
+  },
+  {
+    "group": "membrane-roll",
+    "source": "https://commons.wikimedia.org/wiki/File:Roofing_felt_(%D1%83%D0%BA%D0%BB%D0%B0%D0%B4%D0%BA%D0%B0_%D1%80%D1%83%D0%B1%D0%B5%D1%80%D0%BE%D0%B8%D0%B4%D0%B0_%D0%BD%D0%B0_%D0%BE%D0%B1%D1%80%D0%B5%D1%88%D1%91%D1%82%D0%BA%D1%832).jpg",
+    "license": "CC0",
+    "author": "Андрей Перцев 1967 at Russian Wikipedia"
+  },
+  {
+    "group": "membrane-roll",
+    "source": "https://commons.wikimedia.org/wiki/File:Roofing_contractors.jpg",
+    "license": "Public domain",
+    "author": "Unknown authorUnknown author"
+  },
+  {
+    "group": "membrane-roll",
+    "source": "https://commons.wikimedia.org/wiki/File:DachpappeVerschwei%C3%9Fen.JPG",
+    "license": "CC BY-SA 2.5",
+    "author": "böhringer friedrich"
+  },
+  {
+    "group": "roof-tiles",
+    "source": "https://commons.wikimedia.org/wiki/File:Red_clay_roof_tiles.jpg",
+    "license": "CC BY 4.0",
+    "author": "Aplucas0703"
+  },
+  {
+    "group": "roof-tiles",
+    "source": "https://commons.wikimedia.org/wiki/File:Rusty_clay_roof_tiles_stacked_in_an_outdoor_area_with_white_petals_scattered_on_the_ground.jpg",
+    "license": "CC BY 2.0",
+    "author": "Shixart1985"
+  },
+  {
+    "group": "roof-tiles",
+    "source": "https://commons.wikimedia.org/wiki/File:Roof_tiles_packed_in_crate_1.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "W.carter"
+  },
+  {
+    "group": "roof-tiles",
+    "source": "https://commons.wikimedia.org/wiki/File:%22Clay_tile_roof_close_up_shot.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Arivumathi"
+  },
+  {
+    "group": "metal-roof-sheets",
+    "source": "https://commons.wikimedia.org/wiki/File:Standing_seam_metal_roof_-_white.jpg",
+    "license": "CC0",
+    "author": "Wikideas1"
+  },
+  {
+    "group": "metal-roof-sheets",
+    "source": "https://commons.wikimedia.org/wiki/File:Standing_seam_metal_roof_low_pitch_roof-3.jpg",
+    "license": "CC0",
+    "author": "Wikideas1"
+  },
+  {
+    "group": "metal-roof-sheets",
+    "source": "https://commons.wikimedia.org/wiki/File:Seabees_apply_metal_roofing_sheets_while_reconstructing._(44604813675).jpg",
+    "license": "Public domain",
+    "author": "Official U.S. Navy Page from United States of America\n\nMC2 Kelsey J. Hockenberge"
+  },
+  {
+    "group": "metal-roof-sheets",
+    "source": "https://commons.wikimedia.org/wiki/File:Corrugated_roof_on_a_garage_in_Tuntorp.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "W.carter"
+  },
+  {
+    "group": "rain-gutters",
+    "source": "https://commons.wikimedia.org/wiki/File:Rain_gutter_and_drain_pipe_(25921162725).jpg",
+    "license": "CC BY 2.0",
+    "author": "Jeremy from Sydney, Australia"
+  },
+  {
+    "group": "rain-gutters",
+    "source": "https://commons.wikimedia.org/wiki/File:Gutter_1850s_House_New_Orleans.jpg",
+    "license": "CC BY 2.0",
+    "author": "Mark Gstohl"
+  },
+  {
+    "group": "rain-gutters",
+    "source": "https://commons.wikimedia.org/wiki/File:Ch%C3%A9neau,_bande_d%27%C3%A9gout_et_noue_en_plomb..JPG",
+    "license": "CC BY-SA 3.0",
+    "author": "Le plombier du désert"
+  },
+  {
+    "group": "construction-timber",
+    "source": "https://commons.wikimedia.org/wiki/File:Stacked_wood_planks_(Unsplash).jpg",
+    "license": "CC0",
+    "author": "Alex Jones alexjones"
+  },
+  {
+    "group": "construction-timber",
+    "source": "https://commons.wikimedia.org/wiki/File:STACKED_LUMBER_-_NARA_-_542866.jpg",
+    "license": "Public domain",
+    "author": "Tomas Sennett"
+  },
+  {
+    "group": "construction-timber",
+    "source": "https://commons.wikimedia.org/wiki/File:Stacked_Lumber_(53832000192).jpg",
+    "license": "CC BY 2.0",
+    "author": "Tony Webster"
+  },
+  {
+    "group": "osb-boards",
+    "source": "https://commons.wikimedia.org/wiki/File:OSB_Eurostrand_2009.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Elke Wetzig (elya)"
+  },
+  {
+    "group": "osb-boards",
+    "source": "https://commons.wikimedia.org/wiki/File:Oriented_strand_board_at_Courtab%C5%93uf_2011.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Lionel Allorge"
+  },
+  {
+    "group": "osb-boards",
+    "source": "https://commons.wikimedia.org/wiki/File:OSB_plaat.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": ".Evelin"
+  },
+  {
+    "group": "plywood-sheets",
+    "source": "https://commons.wikimedia.org/wiki/File:Plywood_texture.JPG",
+    "license": "CC0",
+    "author": "Riverswim16"
+  },
+  {
+    "group": "plywood-sheets",
+    "source": "https://commons.wikimedia.org/wiki/File:Plywood.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Rotor DB at English Wikipedia"
+  },
+  {
+    "group": "plywood-sheets",
+    "source": "https://commons.wikimedia.org/wiki/File:Plywood_panels_for_new_construction.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Downtowngal"
+  },
+  {
+    "group": "screws",
+    "source": "https://commons.wikimedia.org/wiki/File:Wood_screws.jpg",
+    "license": "CC BY 3.0",
+    "author": "Dmitry Makeev"
+  },
+  {
+    "group": "screws",
+    "source": "https://commons.wikimedia.org/wiki/File:Screws_(8079455340).jpg",
+    "license": "CC BY 2.0",
+    "author": "Gemma Stiles from Sydney, Australia"
+  },
+  {
+    "group": "screws",
+    "source": "https://commons.wikimedia.org/wiki/File:Black_wood_screw_with_flat_Phillips_head.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Mynameisnatmo"
+  },
+  {
+    "group": "wall-anchors-plugs",
+    "source": "https://commons.wikimedia.org/wiki/File:%D0%94%D1%8E%D0%B1%D0%B5%D0%BB%D1%8C-%D0%B3%D0%B2%D0%BE%D0%B7%D0%B4%D1%8C_(%D0%B4%D1%8E%D0%B1%D0%B5%D0%BB%D1%8C_%D0%B8_%D0%B3%D0%B2%D0%BE%D0%B7%D0%B4%D1%8C).JPG",
+    "license": "CC0",
+    "author": "Bronzaclose"
+  },
+  {
+    "group": "wall-anchors-plugs",
+    "source": "https://commons.wikimedia.org/wiki/File:D%C3%BCbel_Rawlplug_(24097520989).jpg",
+    "license": "CC BY 2.0",
+    "author": "Anka Albrecht"
+  },
+  {
+    "group": "wall-anchors-plugs",
+    "source": "https://commons.wikimedia.org/wiki/File:Tasselli_wall_plug.jpg",
+    "license": "CC BY-SA 2.5",
+    "author": "Alessio Sbarbaro"
+  },
+  {
+    "group": "nails",
+    "source": "https://commons.wikimedia.org/wiki/File:NailsCloseup.jpg",
+    "license": "CC0",
+    "author": "Raysonho @ Open Grid Scheduler / Grid Engine"
+  },
+  {
+    "group": "nails",
+    "source": "https://commons.wikimedia.org/wiki/File:Alte_N%C3%A4gel.jpg",
+    "license": "Public domain",
+    "author": "Photo: Andreas Praefcke"
+  },
+  {
+    "group": "nails",
+    "source": "https://commons.wikimedia.org/wiki/File:Ausgangslage_BerchtesgadenerProblem.JPG",
+    "license": "Public domain",
+    "author": "No machine-readable author provided. Plani assumed (based on copyright claims)."
+  },
+  {
+    "group": "nails",
+    "source": "https://commons.wikimedia.org/wiki/File:Nails_Flat_Head_Steel_Industry_4607200_Edited_2020_(49931938461).jpg",
+    "license": "CC BY 2.0",
+    "author": "Tool Dude8mm"
+  },
+  {
+    "group": "sealant-cartridge",
+    "source": "https://commons.wikimedia.org/wiki/File:Caulking.jpg",
+    "license": "CC BY 3.0",
+    "author": "Achim Hering"
+  },
+  {
+    "group": "sealant-cartridge",
+    "source": "https://commons.wikimedia.org/wiki/File:Silikonpistole_(fcm).jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Photograph:  Frank C. Müller, Baden-Baden"
+  },
+  {
+    "group": "sealant-cartridge",
+    "source": "https://commons.wikimedia.org/wiki/File:Kartuschenpistole.jpg",
+    "license": "CC BY-SA 3.0 de",
+    "author": "D-Platoon"
+  },
+  {
+    "group": "construction-adhesive",
+    "source": "https://commons.wikimedia.org/wiki/File:Defproc.JPG",
+    "license": "Public domain",
+    "author": "Pmnchk"
+  },
+  {
+    "group": "construction-adhesive",
+    "source": "https://commons.wikimedia.org/wiki/File:2-part_silicone_adhesive_sealant.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Cjp24"
+  },
+  {
+    "group": "power-drill",
+    "source": "https://commons.wikimedia.org/wiki/File:US_Navy_061125-N-6889J-033_Builder_3rd_Class_Mathew_Speece_of_Naval_Mobile_Construction_Battalion_Seven_Four_(NMCB-74)_secures_the_frame_of_a_wall_at_Camp_Ramadi.jpg",
+    "license": "Public domain",
+    "author": "U.S. Navy photo by Mass Communication Specialist Gregory N. Juday"
+  },
+  {
+    "group": "power-drill",
+    "source": "https://commons.wikimedia.org/wiki/File:CordlessDrill.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Greg Hume"
+  },
+  {
+    "group": "power-drill",
+    "source": "https://commons.wikimedia.org/wiki/File:Hammer_Drill_AccuMaster.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Артём В."
+  },
+  {
+    "group": "angle-grinder",
+    "source": "https://commons.wikimedia.org/wiki/File:Let_the_Sparks_Fly_-_Makita_9557NB_Angle_Grinder_(4070962245).jpg",
+    "license": "CC BY 2.0",
+    "author": "Mark Hunter"
+  },
+  {
+    "group": "angle-grinder",
+    "source": "https://commons.wikimedia.org/wiki/File:Makita_GA9050_Angle_Grinder_(4887726714).jpg",
+    "license": "CC BY 2.0",
+    "author": "Mark Hunter"
+  },
+  {
+    "group": "angle-grinder",
+    "source": "https://commons.wikimedia.org/wiki/File:Gerinda_tangan.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Sjv30"
+  },
+  {
+    "group": "angle-grinder",
+    "source": "https://commons.wikimedia.org/wiki/File:-2019-08-13_Bosch_angle_grinder,_Norfolk.JPG",
+    "license": "CC BY-SA 4.0",
+    "author": "Kolforn (Kolforn)\nI'd appreciate if you could mail me (Kolforn@gmail.com) if you"
+  },
+  {
+    "group": "hand-tools-trowel",
+    "source": "https://commons.wikimedia.org/wiki/File:Finishing_trowel.webp",
+    "license": "CC0",
+    "author": "Wikideas1"
+  },
+  {
+    "group": "hand-tools-trowel",
+    "source": "https://commons.wikimedia.org/wiki/File:Masons_trowel.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "Mike Lupinacci"
+  },
+  {
+    "group": "hand-tools-trowel",
+    "source": "https://commons.wikimedia.org/wiki/File:Kielnia_001.JPG",
+    "license": "CC BY-SA 3.0",
+    "author": "Mielon"
+  },
+  {
+    "group": "spirit-level",
+    "source": "https://commons.wikimedia.org/wiki/File:Waterpass.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Dmitry Makeev"
+  },
+  {
+    "group": "spirit-level",
+    "source": "https://commons.wikimedia.org/wiki/File:Spirit_level_bubble_20170625.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Santeri Viinamäki"
+  },
+  {
+    "group": "spirit-level",
+    "source": "https://commons.wikimedia.org/wiki/File:KAPRO_783.JPG",
+    "license": "CC BY-SA 3.0",
+    "author": "Dmitry G"
+  },
+  {
+    "group": "hammer",
+    "source": "https://commons.wikimedia.org/wiki/File:Hammer_Time_(49790892297).jpg",
+    "license": "CC BY 2.0",
+    "author": "Ajay Suresh from New York, NY, USA"
+  },
+  {
+    "group": "hammer",
+    "source": "https://commons.wikimedia.org/wiki/File:Hammer_and_nails.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Santeri Viinamäki"
+  },
+  {
+    "group": "hammer",
+    "source": "https://commons.wikimedia.org/wiki/File:Magnum_25116_claw_hammer.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Santeri Viinamäki"
+  },
+  {
+    "group": "hammer",
+    "source": "https://commons.wikimedia.org/wiki/File:Carpenter%27s_hammer.JPG",
+    "license": "CC BY-SA 3.0",
+    "author": "Kszapsza"
+  },
+  {
+    "group": "hard-hat",
+    "source": "https://commons.wikimedia.org/wiki/File:Hard_hat_20111111.jpg",
+    "license": "Public domain",
+    "author": "Batholith (talk)"
+  },
+  {
+    "group": "hard-hat",
+    "source": "https://commons.wikimedia.org/wiki/File:Falling_rocks-hard_hats_for_visitors_Natural_Bridge_State_Park_(30432108435).jpg",
+    "license": "CC BY 2.0",
+    "author": "vastateparksstaff"
+  },
+  {
+    "group": "hard-hat",
+    "source": "https://commons.wikimedia.org/wiki/File:Yellow_hard_hat.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "רנדום"
+  },
+  {
+    "group": "hard-hat",
+    "source": "https://commons.wikimedia.org/wiki/File:Hard_Hat,_Charmouth_Beach.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Partonez"
+  },
+  {
+    "group": "work-gloves",
+    "source": "https://commons.wikimedia.org/wiki/File:Worn_leather_work_gloves_20200225_100632.jpg",
+    "license": "CC BY 2.0",
+    "author": "el cajon yacht club"
+  },
+  {
+    "group": "work-gloves",
+    "source": "https://commons.wikimedia.org/wiki/File:Leather_work_gloves_composite_P1010224_copy.jpg",
+    "license": "CC BY 2.0",
+    "author": "el cajon yacht club"
+  },
+  {
+    "group": "work-gloves",
+    "source": "https://commons.wikimedia.org/wiki/File:Chainsaw_gloves.JPG",
+    "license": "CC BY-SA 3.0",
+    "author": "Andy Dingley"
+  },
+  {
+    "group": "safety-boots",
+    "source": "https://commons.wikimedia.org/wiki/File:S3_safety_footwear.jpg",
+    "license": "CC BY 3.0",
+    "author": "Francis Flinch"
+  },
+  {
+    "group": "safety-boots",
+    "source": "https://commons.wikimedia.org/wiki/File:Vernesko_23-10-19.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Øyvind Holmstad"
+  },
+  {
+    "group": "safety-boots",
+    "source": "https://commons.wikimedia.org/wiki/File:Leather_Goodyear_welt_example.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Best For My Feet"
+  },
+  {
+    "group": "safety-boots",
+    "source": "https://commons.wikimedia.org/wiki/File:Heavy_duty_long_stainless_steel_shoehorn_and_ISO_203452004_compliant_S3_safety_shoe_and_boot.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Francis Flinch"
+  },
+  {
+    "group": "wheelbarrow",
+    "source": "https://commons.wikimedia.org/wiki/File:Two_wheelbarrows.jpg",
+    "license": "CC BY 4.0",
+    "author": "Oto Zapletal"
+  },
+  {
+    "group": "wheelbarrow",
+    "source": "https://commons.wikimedia.org/wiki/File:Moderne_Schubkarre.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "User:MarkusHagenlocher"
+  },
+  {
+    "group": "wheelbarrow",
+    "source": "https://commons.wikimedia.org/wiki/File:Wheelbarrows_to_loan_at_Waldfriedhof_M%C3%BCnchen_01.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Kritzolina"
+  },
+  {
+    "group": "wheelbarrow",
+    "source": "https://commons.wikimedia.org/wiki/File:Vehicle_-_Diergaarde_Blijdorp_-_Rotterdam_-_Wheelbarrow_-_green.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "AgainErick"
+  },
+  {
+    "group": "concrete-mixer",
+    "source": "https://commons.wikimedia.org/wiki/File:Old_concrete_mixer_on_a_construction_site_in_a_garden.jpg",
+    "license": "CC BY 2.0",
+    "author": "Shixart1985"
+  },
+  {
+    "group": "concrete-mixer",
+    "source": "https://commons.wikimedia.org/wiki/File:Mercedes-Benz_Axor_based_cement_mixer_truck.JPG",
+    "license": "CC BY 3.0 de",
+    "author": "High Contrast"
+  },
+  {
+    "group": "concrete-mixer",
+    "source": "https://commons.wikimedia.org/wiki/File:Mini_concrete_mixer.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Al Riaz Uddin"
+  },
+  {
+    "group": "concrete-mixer",
+    "source": "https://commons.wikimedia.org/wiki/File:Dornbirn-mobile_concrete_pump-concrete_mixer_truck-01ASD.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Asurnipal"
+  },
+  {
+    "group": "ladder",
+    "source": "https://commons.wikimedia.org/wiki/File:Ladder_2.jpg",
+    "license": "CC BY-SA 3.0",
+    "author": "rrafson"
+  },
+  {
+    "group": "ladder",
+    "source": "https://commons.wikimedia.org/wiki/File:Man_working_on_ladder_at_the_Franciscan_Apartments.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Grendelkhan"
+  },
+  {
+    "group": "ladder",
+    "source": "https://commons.wikimedia.org/wiki/File:Ladder_aluminum.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Amin"
+  },
+  {
+    "group": "paint-buckets",
+    "source": "https://commons.wikimedia.org/wiki/File:Paint_bucket_and_brush.jpg",
+    "license": "CC0",
+    "author": "Ionenlaser"
+  },
+  {
+    "group": "paint-buckets",
+    "source": "https://commons.wikimedia.org/wiki/File:Open_Soy_Paint_Cans_(10481725136).jpg",
+    "license": "CC BY 2.0",
+    "author": "United Soybean Board"
+  },
+  {
+    "group": "paint-buckets",
+    "source": "https://commons.wikimedia.org/wiki/File:Bright_blue_paint_fills_a_bucket.jpg",
+    "license": "CC BY 2.0",
+    "author": "Shixart1985"
+  },
+  {
+    "group": "paint-buckets",
+    "source": "https://commons.wikimedia.org/wiki/File:Paint_cans.jpg",
+    "license": "CC BY-SA 4.0",
+    "author": "Rpperini"
+  },
+  {
+    "group": "tile-adhesive-tiles",
+    "source": "https://commons.wikimedia.org/wiki/File:US_Navy_070721-N-9195K-055_Steelworker_3rd_Class_Jason_Tinkman_of_Navy_Mobile_Construction_Battalion_(NMCB)_7_lays_down_grout_before_placing_floor_tiles_during_an_engineering_civic_action_program_conducted_at_An_Khe_Clinic_in_s.jpg",
+    "license": "Public domain",
+    "author": "U.S. Navy photo by Mass Communication Specialist 3rd Class Patrick M. Kearney"
+  },
+  {
+    "group": "tile-adhesive-tiles",
+    "source": "https://commons.wikimedia.org/wiki/File:U.S._Navy_Equipment_Operator_Constructionman_lays_floor_tile.jpg",
+    "license": "Public domain",
+    "author": "U.S. Department of Defense Current Photos"
+  },
+  {
+    "group": "tile-adhesive-tiles",
+    "source": "https://commons.wikimedia.org/wiki/File:Using_a_trowel_to_lay_floor_tiles.jpg",
+    "license": "CC BY 2.0",
+    "author": "Francisco Gonzalez"
+  },
+  {
+    "group": "tile-adhesive-tiles",
+    "source": "https://commons.wikimedia.org/wiki/File:Cool_floor_tiles_-_Piedmont_Mall_Danville,_VA_(7377709480).jpg",
+    "license": "CC BY-SA 2.0",
+    "author": "Mike Kalasnik from Fort Mill, USA"
+  }
+]

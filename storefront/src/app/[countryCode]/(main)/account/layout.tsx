@@ -1,4 +1,6 @@
-import { retrieveCustomer } from "@/lib/data/customer"
+import { retrieveCustomer } from "@lib/data/customer"
+import { Toaster } from "@medusajs/ui"
+import AccountLayout from "@modules/account/templates/account-layout"
 
 export default async function AccountPageLayout({
   dashboard,
@@ -9,5 +11,10 @@ export default async function AccountPageLayout({
 }) {
   const customer = await retrieveCustomer().catch(() => null)
 
-  return <>{customer ? dashboard : login}</>
+  return (
+    <AccountLayout customer={customer}>
+      {customer ? dashboard : login}
+      <Toaster />
+    </AccountLayout>
+  )
 }

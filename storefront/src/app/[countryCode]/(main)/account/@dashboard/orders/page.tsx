@@ -1,12 +1,10 @@
-import { listApprovals } from "@/lib/data/approvals"
-import { retrieveCompany } from "@/lib/data/companies"
-import { retrieveCustomer } from "@/lib/data/customer"
-import { listOrders } from "@/lib/data/orders"
-import OrderOverview from "@/modules/account/components/order-overview"
-import PendingCustomerApprovals from "@/modules/account/components/pending-customer-approvals"
-import { ApprovalStatusType } from "@/types/approval"
-import { Heading } from "@medusajs/ui"
 import { Metadata } from "next"
+
+import OrderOverview from "@modules/account/components/order-overview"
+import { notFound } from "next/navigation"
+import { listOrders } from "@lib/data/orders"
+import Divider from "@modules/common/components/divider"
+import TransferRequestForm from "@modules/account/components/transfer-request-form"
 
 export const metadata: Metadata = {
   title: "Orders",
@@ -14,43 +12,25 @@ export const metadata: Metadata = {
 }
 
 export default async function Orders() {
-  const customer = await retrieveCustomer()
   const orders = await listOrders()
 
-  const { approval_settings } =
-    (await retrieveCompany(customer?.employee?.company_id!)) || {}
-
-  const approval_required =
-    approval_settings?.requires_admin_approval ||
-    approval_settings?.requires_sales_manager_approval
-
-  const { carts_with_approvals } = await listApprovals({
-    status: ApprovalStatusType.PENDING,
-  })
+  if (!orders) {
+    notFound()
+  }
 
   return (
-    <div
-      className="w-full flex flex-col gap-y-4"
-      data-testid="orders-page-wrapper"
-    >
-      <div className="mb-4">
-        <Heading>Orders</Heading>
+    <div className="w-full" data-testid="orders-page-wrapper">
+      <div className="mb-8 flex flex-col gap-y-4">
+        <h1 className="text-2xl-semi">Orders</h1>
+        <p className="text-base-regular">
+          View your previous orders and their status. You can also create
+          returns or exchanges for your orders if needed.
+        </p>
       </div>
-      {approval_required && (
-        <div>
-          <Heading level="h2" className="text-neutral-700 mb-4">
-            Pending Approvals
-          </Heading>
-
-          <PendingCustomerApprovals cartsWithApprovals={carts_with_approvals} />
-        </div>
-      )}
       <div>
-        <Heading level="h2" className="text-neutral-700 mb-4">
-          Completed Orders
-        </Heading>
-
         <OrderOverview orders={orders} />
+        <Divider className="my-16" />
+        <TransferRequestForm />
       </div>
     </div>
   )

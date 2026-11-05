@@ -1,183 +1,182 @@
 "use server"
 
-import { sdk } from "@/lib/config"
-import {
-  getAuthHeaders,
-  getCacheOptions,
-  getCacheTag,
-  getCartId,
-} from "@/lib/data/cookies"
-import {
-  QuoteFilterParams,
-  StoreCreateQuoteMessage,
-  StoreQuotePreviewResponse,
-  StoreQuoteResponse,
-  StoreQuotesResponse,
-} from "@/types"
-import { track } from "@vercel/analytics/server"
+import { sdk } from "@lib/config"
 import { revalidateTag } from "next/cache"
+import { getAuthHeaders, getCacheOptions, getCacheTag, removeCartId } from "./cookies"
 
-export const createQuote = async () => {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
+export type QuoteStatus =
+  | "pending_merchant"
+  | "pending_customer"
+  | "accepted"
+  | "customer_rejected"
+  | "merchant_rejected"
+  | "expired"
 
-  const cartId = await getCartId()
-
-  return sdk.client
-    .fetch<StoreQuoteResponse>(`/store/quotes`, {
-      method: "POST",
-      body: { cart_id: cartId },
-      headers,
-    })
-    .then((quote) => {
-      track("quote_created", {
-        quote_id: quote.quote.id,
-      })
-
-      return quote
-    })
+export type QuoteItem = {
+  id: string
+  title: string
+  subtitle?: string | null
+  product_title: string | null
+  variant_title: string | null
+  variant_sku: string | null
+  thumbnail: string | null
+  quantity: number
+  unit_price: number
+  subtotal: number
+  total: number
 }
 
-export const fetchQuotes = async (query?: QuoteFilterParams) => {
-  const headers = {
-    ...(await getAuthHeaders()),
+export type QuoteMessage = {
+  id: string
+  author_type: "customer" | "merchant" | "system"
+  author_id: string | null
+  text: string
+  created_at: string
+}
+
+export type Quote = {
+  id: string
+  display_id: number
+  status: QuoteStatus
+  customer_id: string
+  cart_id: string | null
+  draft_order_id: string | null
+  order_id: string | null
+  valid_until: string | null
+  delivery_postcode: string | null
+  customer_note?: string | null
+  created_at: string
+  updated_at: string
+  company?: { id: string; name: string } | null
+  customer?: { id: string; email: string; first_name: string | null; last_name: string | null } | null
+  draft_order?: {
+    id: string
+    display_id?: number
+    total: number
+    subtotal?: number
+    item_subtotal?: number
+    tax_total?: number
+    shipping_total?: number
+    discount_total?: number
+    currency_code: string
+    items?: QuoteItem[]
+  } | null
+  order?: { id: string; display_id: number; status: string } | null
+  messages?: QuoteMessage[]
+}
+
+export type QuoteActionResult = { success: boolean; error: string | null; quote_id?: string }
+
+const errorMessage = (error: unknown) => {
+  const message = (error as Error)?.message ?? String(error)
+
+  return message.replace(/^APPROVAL_[A-Z]+:\s*/, "")
+}
+
+const authHeaders = async () => ({ ...(await getAuthHeaders()) })
+
+const revalidateQuotes = async () => {
+  revalidateTag(await getCacheTag("quotes"))
+}
+
+export async function listQuotes(status?: QuoteStatus): Promise<Quote[]> {
+  const headers = await authHeaders()
+
+  if (!("authorization" in headers)) {
+    return []
   }
 
-  const next = {
-    ...(await getCacheOptions("quotes")),
-  }
-
-  return sdk.client.fetch<StoreQuotesResponse>(
-    `/store/quotes?order=-created_at`,
-    {
+  return sdk.client
+    .fetch<{ quotes: Quote[] }>("/store/quotes", {
       method: "GET",
-      query,
+      query: status ? { status, limit: 50 } : { limit: 50 },
       headers,
-      next,
-    }
-  )
+      next: { ...(await getCacheOptions("quotes")) },
+      cache: "force-cache",
+    })
+    .then(({ quotes }) => quotes)
+    .catch(() => [])
 }
 
-export const fetchQuote = async (id: string, query?: QuoteFilterParams) => {
-  const headers = {
-    ...(await getAuthHeaders()),
+export async function retrieveQuote(id: string): Promise<Quote | null> {
+  const headers = await authHeaders()
+
+  if (!("authorization" in headers)) {
+    return null
   }
 
-  const next = {
-    ...(await getCacheOptions(["quote", id].join("-"))),
-  }
-
-  return sdk.client.fetch<StoreQuoteResponse>(`/store/quotes/${id}`, {
-    method: "GET",
-    query,
-    headers,
-    next,
-  })
-}
-
-export const fetchQuotePreview = async (
-  id: string,
-  query?: QuoteFilterParams
-) => {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  const next = {
-    ...(await getCacheOptions(["quotePreview", id].join("-"))),
-  }
-
-  return sdk.client.fetch<StoreQuotePreviewResponse>(
-    `/store/quotes/${id}/preview`,
-    {
+  return sdk.client
+    .fetch<{ quote: Quote }>(`/store/quotes/${id}`, {
       method: "GET",
-      query,
       headers,
-      next,
-    }
-  )
-}
-
-export const acceptQuote = async (id: string) => {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  return sdk.client
-    .fetch<StoreQuoteResponse>(`/store/quotes/${id}/accept`, {
-      method: "POST",
-      body: {},
-      headers,
+      next: { ...(await getCacheOptions("quotes")) },
       cache: "force-cache",
     })
-    .then((res) => {
-      track("quote_accepted", {
-        quote_id: res.quote.id,
-      })
-
-      return res
-    })
-    .finally(async () => {
-      const tags = await Promise.all([
-        getCacheTag("quotes"),
-        getCacheTag(["quote", id].join("-")),
-        getCacheTag(["quotePreview", id].join("-")),
-      ])
-      tags.forEach((tag) => revalidateTag(tag))
-    })
+    .then(({ quote }) => quote)
+    .catch(() => null)
 }
 
-export const rejectQuote = async (id: string) => {
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  return sdk.client
-    .fetch<StoreQuoteResponse>(`/store/quotes/${id}/reject`, {
+export async function requestQuoteFromCart(
+  cartId: string,
+  note?: string,
+  postcode?: string
+): Promise<QuoteActionResult> {
+  try {
+    const { quote } = await sdk.client.fetch<{ quote: { id: string } }>("/store/quotes", {
       method: "POST",
-      body: {},
-      headers,
-      cache: "force-cache",
+      body: {
+        cart_id: cartId,
+        customer_note: note?.trim() || null,
+        delivery_postcode: postcode?.trim() || null,
+      },
+      headers: await authHeaders(),
     })
-    .finally(async () => {
-      const tags = await Promise.all([
-        getCacheTag("quotes"),
-        getCacheTag(["quote", id].join("-")),
-        getCacheTag(["quotePreview", id].join("-")),
-      ])
-      tags.forEach((tag) => revalidateTag(tag))
-    })
+
+    await removeCartId()
+    revalidateTag(await getCacheTag("carts"))
+    await revalidateQuotes()
+
+    return { success: true, error: null, quote_id: quote.id }
+  } catch (error) {
+    return { success: false, error: errorMessage(error) }
+  }
 }
 
-export const createQuoteMessage = async (
-  id: string,
-  body: StoreCreateQuoteMessage
-) => {
-  const headers = {
-    ...(await getAuthHeaders()),
+export async function acceptQuote(id: string): Promise<QuoteActionResult> {
+  try {
+    await sdk.client.fetch(`/store/quotes/${id}/accept`, { method: "POST", headers: await authHeaders() })
+    await revalidateQuotes()
+    revalidateTag(await getCacheTag("orders"))
+    return { success: true, error: null, quote_id: id }
+  } catch (error) {
+    return { success: false, error: errorMessage(error) }
   }
+}
 
-  return sdk.client
-    .fetch<StoreQuoteResponse>(`/store/quotes/${id}/messages`, {
+export async function rejectQuote(id: string, reason?: string): Promise<QuoteActionResult> {
+  try {
+    await sdk.client.fetch(`/store/quotes/${id}/reject`, {
       method: "POST",
-      body,
-      headers,
-      cache: "force-cache",
+      body: { reason: reason?.trim() || null },
+      headers: await authHeaders(),
     })
-    .then((res) => {
-      track("quote_message_created", {
-        quote_id: res.quote.id,
-      })
+    await revalidateQuotes()
+    return { success: true, error: null, quote_id: id }
+  } catch (error) {
+    return { success: false, error: errorMessage(error) }
+  }
+}
 
-      return res
+export async function sendQuoteMessage(id: string, text: string): Promise<QuoteActionResult> {
+  try {
+    await sdk.client.fetch(`/store/quotes/${id}/messages`, {
+      method: "POST",
+      body: { text },
+      headers: await authHeaders(),
     })
-    .finally(async () => {
-      const tags = await Promise.all([
-        getCacheTag("quotes"),
-        getCacheTag(["quote", id].join("-")),
-        getCacheTag(["quotePreview", id].join("-")),
-      ])
-      tags.forEach((tag) => revalidateTag(tag))
-    })
+    await revalidateQuotes()
+    return { success: true, error: null, quote_id: id }
+  } catch (error) {
+    return { success: false, error: errorMessage(error) }
+  }
 }

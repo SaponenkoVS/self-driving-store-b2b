@@ -1,9 +1,9 @@
-import Bancontact from "@/modules/common/icons/bancontact"
-import FilePlus from "@/modules/common/icons/file-plus"
-import Ideal from "@/modules/common/icons/ideal"
-import PayPal from "@/modules/common/icons/paypal"
-import { CreditCard } from "@medusajs/icons"
 import React from "react"
+import { CreditCard } from "@medusajs/icons"
+
+import Ideal from "@modules/common/icons/ideal"
+import Bancontact from "@modules/common/icons/bancontact"
+import PayPal from "@modules/common/icons/paypal"
 
 /* Map of payment provider_id to their title and icon. Add in any payment providers you want to use. */
 export const paymentInfoMap: Record<
@@ -31,8 +31,8 @@ export const paymentInfoMap: Record<
     icon: <PayPal />,
   },
   pp_system_default: {
-    title: "Pay by invoice",
-    icon: <FilePlus />,
+    title: "Manual Payment",
+    icon: <CreditCard />,
   },
   // Add more payment providers here
 }
@@ -40,10 +40,10 @@ export const paymentInfoMap: Record<
 // This only checks if it is native stripe or medusa payments for card payments, it ignores the other stripe-based providers
 export const isStripeLike = (providerId?: string) => {
   return (
-    providerId?.startsWith("pp_stripe") ||
-    providerId?.startsWith("pp_medusa-payments")
+    providerId?.startsWith("pp_stripe_") || providerId?.startsWith("pp_medusa-")
   )
 }
+
 export const isPaypal = (providerId?: string) => {
   return providerId?.startsWith("pp_paypal")
 }
@@ -51,55 +51,25 @@ export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }
 
-export const currencySymbolMap: Record<string, string> = {
-  usd: "$",
-  eur: "€",
-  gbp: "£",
-  cad: "C$",
-  aud: "A$",
-  jpy: "¥",
-  cny: "¥",
-  chf: "CHF",
-  hkd: "HK$",
-  nzd: "NZ$",
-  sek: "kr",
-  krw: "₩",
-  sgd: "S$",
-  nok: "kr",
-  mxn: "$",
-  inr: "₹",
-  rub: "₽",
-  zar: "R",
-  try: "₺",
-  brl: "R$",
-  twd: "NT$",
-  dkk: "kr",
-  pln: "zł",
-  thb: "฿",
-  idr: "Rp",
-  huf: "Ft",
-  czk: "Kč",
-  ils: "₪",
-  clp: "$",
-  php: "₱",
-  aed: "د.إ",
-  cop: "$",
-  sar: "﷼",
-  myr: "RM",
-  ron: "lei",
-  vnd: "₫",
-  egp: "£",
-  pkr: "₨",
-  ngn: "₦",
-  bdt: "৳",
-  uah: "₴",
-  kes: "KSh",
-  ars: "$",
-  qar: "﷼",
-  kwd: "د.ك",
-  omr: "﷼",
-  bhd: "ب.د",
-  lkr: "₨",
-  mmk: "K",
-  uzs: "лв",
-}
+// Add currencies that don't need to be divided by 100
+export const noDivisionCurrencies = [
+  "krw",
+  "jpy",
+  "vnd",
+  "clp",
+  "pyg",
+  "xaf",
+  "xof",
+  "bif",
+  "djf",
+  "gnf",
+  "kmf",
+  "mga",
+  "rwf",
+  "xpf",
+  "htg",
+  "vuv",
+  "xag",
+  "xdr",
+  "xau",
+]

@@ -1,44 +1,51 @@
-import SkeletonProductGrid from "@/modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@/modules/store/components/refinement-list"
-import { SortOptions } from "@/modules/store/components/refinement-list/sort-products"
-import StoreBreadcrumb from "@/modules/store/components/store-breadcrumb"
-import PaginatedProducts from "@/modules/store/templates/paginated-products"
-import { HttpTypes } from "@medusajs/types"
 import { Suspense } from "react"
+
+import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
+import RefinementList from "@modules/store/components/refinement-list"
+import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+
+import PaginatedProducts from "./paginated-products"
 
 const StoreTemplate = ({
   sortBy,
   page,
+  q,
   countryCode,
-  categories,
 }: {
   sortBy?: SortOptions
   page?: string
+  q?: string
   countryCode: string
-  categories?: HttpTypes.StoreProductCategory[]
 }) => {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "created_at"
 
   return (
-    <div className="bg-neutral-100">
-      <div
-        className="flex flex-col py-6 content-container gap-4"
-        data-testid="category-container"
-      >
-        <StoreBreadcrumb />
-        <div className="flex flex-col small:flex-row small:items-start gap-3">
-          <RefinementList sortBy={sort} categories={categories} />
-          <div className="w-full">
-            <Suspense fallback={<SkeletonProductGrid />}>
-              <PaginatedProducts
-                sortBy={sort}
-                page={pageNumber}
-                countryCode={countryCode}
-              />
-            </Suspense>
-          </div>
+    <div
+      className="flex flex-col small:flex-row small:items-start py-6 content-container"
+      data-testid="category-container"
+    >
+      <RefinementList sortBy={sort} />
+      <div className="w-full">
+        <div className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+            Trade catalogue
+          </p>
+          <h1
+            className="mt-2 font-display text-3xl font-bold text-ink"
+            data-testid="store-page-title"
+          >
+            {q ? `Results for "${q}"` : "All products"}
+          </h1>
         </div>
+        <Suspense fallback={<SkeletonProductGrid />}>
+          <PaginatedProducts
+            sortBy={sort}
+            page={pageNumber}
+            q={q}
+            countryCode={countryCode}
+          />
+        </Suspense>
       </div>
     </div>
   )

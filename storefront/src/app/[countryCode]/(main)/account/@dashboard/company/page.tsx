@@ -1,47 +1,57 @@
-import { retrieveCompany } from "@/lib/data/companies"
-import { retrieveCustomer } from "@/lib/data/customer"
-import { listRegions } from "@/lib/data/regions"
-import ApprovalSettingsCard from "@/modules/account/components/approval-settings-card"
-import CompanyCard from "@/modules/account/components/company-card"
-import EmployeesCard from "@/modules/account/components/employees-card"
-import InviteEmployeeCard from "@/modules/account/components/invite-employee-card"
-import { Heading } from "@medusajs/ui"
+import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { listApprovals, retrieveMyCompany } from "@lib/data/companies"
+import { retrieveCustomer } from "@lib/data/customer"
+import AddEmployeeForm from "@modules/account/components/company/add-employee-form"
+import ApprovalsList from "@modules/account/components/company/approvals-list"
+import CompanyDetails from "@modules/account/components/company/company-details"
+import CompanyStatusBanner from "@modules/account/components/company/company-status-banner"
+import EmployeesTable from "@modules/account/components/company/employees-table"
+import { eyebrow } from "@modules/account/components/company/format"
+import NoCompany from "@modules/account/components/company/no-company"
 
-export default async function Company() {
-  const customer = await retrieveCustomer()
-  const regions = await listRegions()
+export const metadata: Metadata = {
+  title: "Company",
+  description: "Your company trade account, terms and employees.",
+}
 
-  if (!customer || !customer?.employee?.company) return notFound()
+export default async function CompanyPage() {
+  const customer = await retrieveCustomer().catch(() => null)
 
-  const company = await retrieveCompany(customer.employee.company.id)
+  if (!customer) {
+    notFound()
+  }
+
+  const data = await retrieveMyCompany()
+
+  if (!data) {
+    return <NoCompany customer={customer} />
+  }
+
+  const isAdmin = data.employee?.role === "admin"
+  const approvals = await listApprovals()
 
   return (
-    <div className="w-full">
-      <div className="mb-8 flex flex-col gap-y-4">
-        <Heading level="h2" className="text-lg text-neutral-950">
-          Company Details
-        </Heading>
-        <CompanyCard company={company} regions={regions} />
+    <div className="flex w-full flex-col gap-6" data-testid="company-page-wrapper">
+      <div>
+        <p className={eyebrow}>Trade account</p>
+        <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">{data.company.name}</h1>
+        <p className="mt-1 text-sm text-ink-600">
+          {isAdmin
+            ? "Manage company details, buyers and their spending limits."
+            : "Your company terms and buyer limits. Ask a company administrator to change them."}
+        </p>
       </div>
-      <div className="mb-8 flex flex-col gap-y-4">
-        <Heading level="h2" className="text-lg text-neutral-950">
-          Approval Settings
-        </Heading>
-        <ApprovalSettingsCard company={company} customer={customer} />
-      </div>
-      <div className="mb-8 flex flex-col gap-y-4">
-        <Heading level="h2" className="text-lg text-neutral-950">
-          Employees
-        </Heading>
-        <EmployeesCard company={company} />
-      </div>
-      <div className="mb-8 flex flex-col gap-y-4">
-        <Heading level="h2" className="text-lg text-neutral-950">
-          Invite Employees
-        </Heading>
-        <InviteEmployeeCard company={company} />
-      </div>
+      <CompanyStatusBanner showLink={false} />
+      <CompanyDetails company={data.company} />
+      <EmployeesTable
+        employees={data.company.employees}
+        currencyCode={data.company.currency_code}
+        isAdmin={isAdmin}
+        myCustomerId={customer.id}
+      />
+      {isAdmin && <AddEmployeeForm />}
+      <ApprovalsList approvals={approvals} isAdmin={isAdmin} myCustomerId={customer.id} />
     </div>
   )
 }

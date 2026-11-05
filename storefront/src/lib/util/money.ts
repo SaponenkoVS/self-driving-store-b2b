@@ -1,4 +1,4 @@
-import { isEmpty } from "@/lib/util/isEmpty"
+import { isEmpty } from "./isEmpty"
 
 type ConvertToLocaleParams = {
   amount: number
