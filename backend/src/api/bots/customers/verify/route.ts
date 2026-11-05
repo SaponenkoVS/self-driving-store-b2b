@@ -34,7 +34,8 @@ export const POST = async (req: MedusaRequest<BotsVerifyCustomerType>, res: Medu
       "employee.company.tax_id",
       "employee.company.currency_code",
     ],
-    filters: { email, has_account: true },
+    // Generated query types (.medusa/types) type customer.email filters as `undefined`; the runtime filter is valid.
+    filters: { email, has_account: true } as any,
   });
 
   const match = customers.find((c: any) => {
