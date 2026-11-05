@@ -9,7 +9,10 @@ const REDIS_URL = process.env.REDIS_URL;
 
 // Use Redis-backed infrastructure modules when REDIS_URL is set (production),
 // and fall back to the in-memory ones otherwise (local development).
-const infrastructureModules = REDIS_URL
+const infrastructureModules: Record<
+  string,
+  { resolve: string; options?: Record<string, unknown> }
+> = REDIS_URL
   ? {
       [Modules.CACHE]: {
         resolve: "@medusajs/medusa/cache-redis",
