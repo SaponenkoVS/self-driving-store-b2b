@@ -32,7 +32,7 @@ The function receives as a parameter an object having a `container` property, wh
 To run the custom CLI script, run the `exec` command:
 
 ```bash
-npx medusa exec ./src/scripts/my-script.ts
+bun medusa exec ./src/scripts/my-script.ts
 ```
 
 ---
@@ -54,5 +54,5 @@ export default async function myScript({ args }: ExecArgs) {
 Then, pass the arguments in the `exec` command after the file path:
 
 ```bash
-npx medusa exec ./src/scripts/my-script.ts arg1 arg2
+bun medusa exec ./src/scripts/my-script.ts arg1 arg2
 ```

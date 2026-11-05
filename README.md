@@ -50,6 +50,7 @@
 ⚠️ We have tested this repo with the below versions:
 
 - ✅ Node 20
+- ✅ Bun 1.3 (package manager)
 - ✅ Postgres 15
 - ✅ Medusa 2.4
 - ✅ Next.js 15
@@ -130,14 +131,14 @@ cd ./backend
 # Clone .env.template
 cp .env.template .env
 
-# Install dependencies
-yarn install
-
 # Install dependencies, setup database & seed data
-yarn install && yarn medusa db:create && yarn medusa db:migrate && yarn run seed && yarn medusa user -e admin@test.com -p supersecret -i admin
+bun install && bun medusa db:create && bun medusa db:migrate && bun run seed && bun medusa user -e admin@test.com -p supersecret -i admin
+
+# Seed the building materials catalog (download images first, optional)
+bun run seed:images && bun run seed:catalog
 
 # Start Medusa project - backend & admin
-yarn dev
+bun run dev
 
 ## Setup Storefront
 
@@ -148,7 +149,7 @@ cd ../storefront
 cp .env.template .env
 
 # Install dependencies
-yarn install
+bun install
 ```
 
 #### Setup publishable key
@@ -163,7 +164,7 @@ yarn install
 
 ```
 # Start Medusa storefront
-yarn dev
+bun run dev
 ```
 
 Visit the following links to see the Medusa storefront & admin
@@ -179,13 +180,13 @@ Some general guidelines for when you're updating this Starter to a newer version
 
 ## Update packages
 
-Run `yarn install` in both projects to update you're packages to the latest versions.
+Run `bun install` in both projects to update your packages to the latest versions.
 
 ## Run migrations
 
-To reflect any changes made to data models, make sure to run `npx medusa db:migrate` in the backend project.
+To reflect any changes made to data models, make sure to run `bun medusa db:migrate` in the backend project.
 
-> Note: are you updating from a version of this Starter that didn't have the Approval module yet? Run `npx medusa exec src/scripts/create-approval-settings.ts` in the backend project to add approval settings to all existing companies.
+> Note: are you updating from a version of this Starter that didn't have the Approval module yet? Run `bun medusa exec src/scripts/create-approval-settings.ts` in the backend project to add approval settings to all existing companies.
 
 # Resources
 
