@@ -1,3 +1,8 @@
+
+
+https://github.com/user-attachments/assets/723ccd40-5aab-4ff8-be40-53e2737a839a
+
+
 <p align="center">
   <img src="docs/readme/hero.jpg" alt="A B2B store where bots negotiate – and a guard signs every price. Buyer bot, Relay, store crew, Medusa." width="100%">
 </p>
