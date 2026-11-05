@@ -1,0 +1,13 @@
+{
+  "name": "@nsc/bots",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bot identities, skills and rulebook. Synced to each Grok account's cloud computer.",
+  "scripts": {
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@nsc/protocol": "workspace:*",
+    "@nsc/relay": "workspace:*"
+  }
+}

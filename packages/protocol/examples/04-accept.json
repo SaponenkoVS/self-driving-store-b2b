@@ -1,0 +1,8 @@
+{
+  "protocol": "b2b-nego/v1",
+  "msg_id": "b1f0c2d4-0004",
+  "thread_id": "T-bella-0001",
+  "from": { "account": "bella-bau", "role": "buyer" },
+  "to": { "account": "store", "role": "customer-manager" },
+  "type": "accept"
+}

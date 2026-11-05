@@ -1,0 +1,16 @@
+{
+  "name": "@nsc/relay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/server.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nsc/protocol": "workspace:*",
+    "hono": "^4.7.0",
+    "zod": "^3.24.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "protocol": "b2b-nego/v1",
+  "msg_id": "b1f0c2d4-0003",
+  "thread_id": "T-bella-0001",
+  "from": { "account": "bella-bau", "role": "buyer" },
+  "to": { "account": "store", "role": "customer-manager" },
+  "type": "counter",
+  "lines": [
+    { "sku": "PIPE-SS-24", "qty": 40, "unit_price": 76, "currency": "CHF", "deliver_by": "2026-11-10" }
+  ]
+}

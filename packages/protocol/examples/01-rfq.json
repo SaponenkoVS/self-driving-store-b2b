@@ -1,0 +1,12 @@
+{
+  "protocol": "b2b-nego/v1",
+  "msg_id": "b1f0c2d4-0001",
+  "thread_id": "T-bella-0001",
+  "from": { "account": "bella-bau", "role": "buyer" },
+  "to": { "account": "store", "role": "customer-manager" },
+  "type": "rfq",
+  "lines": [
+    { "sku": "PIPE-SS-24", "title": "Stainless pipe 2.4 m", "qty": 40, "spec": "cut at 45 degrees", "deliver_by": "2026-11-10" }
+  ],
+  "note": "Delivery to Zurich site, gate 2."
+}
